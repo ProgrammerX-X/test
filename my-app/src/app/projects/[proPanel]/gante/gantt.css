@@ -1,0 +1,13 @@
+/* В глобальном CSS или в компоненте */
+.gantt_container {
+  overflow-y: auto !important;
+  max-height: 500px !important;
+}
+
+.gantt_grid {
+  overflow-y: auto !important;
+}
+
+.gantt_task {
+  overflow-y: auto !important;
+}
