@@ -42,3 +42,7 @@ next-env.d.ts
 
 
 /src/app/api/database
+package-lock.json
+package.json
+tsconfig.json
+.gitignore

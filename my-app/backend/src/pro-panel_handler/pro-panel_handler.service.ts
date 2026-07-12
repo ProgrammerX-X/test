@@ -159,7 +159,6 @@ export class ProPanelHandlerService {
       if(resp!=null){
         return {error: "Error! Repeat name!"}
       }else{
-        // console.log(1)
         let id = new ObjectId()
         user.updateOne(
           {email: email}, 
@@ -261,7 +260,7 @@ export class ProPanelHandlerService {
           } as any
         })
         const blocks_ = await this.getBlocksFunction(email, project);
-        this.taskGateway.upBlocks({payload: blocks_});
+        this.taskGateway.upBlocks({payload: blocks_}, email, token, projectId);
         return {error: ''}
       }else{
         return {error: 'This block exists. Try another name.'}

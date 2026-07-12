@@ -40,7 +40,7 @@ export class SenderController {
 
     let resp = await this.service_.verifyToken(body.token)
     if (resp!='Invalid token'){
-      let resp_ = await this.service_.seed(resp.email)
+      await this.service_.seed(resp.email)
       return {resp: resp.email, project: resp.project, fromEmail: resp.fromEmail, text: 'Mail send!'}
     }else{
       return {error: resp, status: 404}

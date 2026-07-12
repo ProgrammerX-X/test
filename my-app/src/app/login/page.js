@@ -24,13 +24,17 @@ function LoginForm(){
         const resp = await response.json()
         if(resp.err_db.email){
             setError({email: resp.err_db.email})
-        }else{
-            setError(resp.err)
+        }else if(err.err_db.password){
+            setError(err.err_db.password)
+        }
+        else{
+            setError(resp.err.err)
         }
         if(resp.err.params === 'ok' && resp.err_db.params  === 'ok'){
             window.location.href = '/confirmation'
         }
     }
+    console.log(error)
     const [type, setType] = useState('password');
     const [image, setImage] = useState('./images/icons/eye_closed.svg')
 

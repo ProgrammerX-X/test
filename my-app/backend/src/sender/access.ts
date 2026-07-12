@@ -1,12 +1,12 @@
 import {connection} from '../db'
 import { MongoClient, ObjectId } from 'mongodb';
 export async function checkToken(email: string, token: string){
-        const cursor = connection.collection('data')
-        const validation = await cursor.findOne({email: email, login: token})
-        return validation
-    }
+    const cursor = connection.collection('data')
+    const validation = await cursor.findOne({email: email, login: token})
+    return validation
+}
 
-export async function checkRoots(email: string, project: string, projectId: any, agreeRoots?: any, teams_in?: boolean){
+export async function checkRoots(email: string, project: string, projectId: any, agreeRoots?: any){
     const roots = connection.collection('teams')
     let resp = await roots.findOne({'projects.owner': email, 'projects.proj.project_name': project})
     if (resp != null){
@@ -218,6 +218,14 @@ export async function getProjectsAll_socket(email_: string){
         return {directions: '', emails: ''}
     }
   }
+  export async function checkLogin(email:string, token:string){
+        let token_ = await checkToken(email, token)
+        if(token_!=null){
+            return true
+        }else{
+            return false
+        }
+    }
 //   DONT WORKING FIX
 export async function getBlocksFunction_socket(email: string, project: string, projectId:string) {
 const projects = connection.collection('projects')
@@ -244,6 +252,7 @@ const id = new ObjectId(projectId)
     }
     }
 }
+
 //   if(result!==null){
 //     let resp = await projects.findOne({email: email, 'somelProjects.project': project}, {projection: {'somelProjects.fromEmail': 1}})
 //     console.log(resp)

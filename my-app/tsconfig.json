@@ -31,5 +31,10 @@
     ".next/dev/types/**/*.ts",
     "**/*.mts"
 , "src/app/donate/page.js", "src/app/projects/[proPanel]/page.js"  ],
-  "exclude": ["node_modules"]
+  "exclude": [
+      "node_modules",
+      "../../apps/backend/**/*",
+      "../../backend/**/*",
+      "backend"
+    ]
 }

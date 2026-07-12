@@ -1,7 +1,7 @@
 'use client'
 import './page.css'
 import {ProPanel} from '../../list/components'
-import {useState, useEffect, useRef} from 'react'
+import {useState, useEffect, useRef, useCallback} from 'react'
 import dynamic from 'next/dynamic';
 import {DndContext, PointerSensor, useSensor, useSensors } from '@dnd-kit/core'
 import { SortableContext, arrayMove } from '@dnd-kit/sortable';
@@ -15,6 +15,8 @@ import io from 'socket.io-client';
 import {Gantt} from './gante/gante'
 import React from 'react'
 import { convertServerPatchToFullTree } from 'next/dist/client/components/segment-cache/navigation';
+import {ModalChat} from './chat/module_chats'
+import {getMessage} from './chat/chats_getSendData'
 
 const Select = dynamic(
   () => import('react-select'),
@@ -33,7 +35,7 @@ const SmallModal = ({ callback }) => {
       email = await email.response}
     }
     func_()
-  })
+  }, [])
   const [error, setError] = useState('')
   const fetch_share = async() =>{
     const response = await fetch(`${process.env.NEXT_PUBLIC_SERVER_DOMAIN}/sender/send_mail`,{
@@ -264,7 +266,9 @@ function TaskMaker({callbackDeadline}){
   useEffect(()=>{
     socket.current = io(process.env.NEXT_PUBLIC_SERVER_DOMAIN);
     socket.current.on('updateBlocks', (blocks) => {
-      setTasks(blocks.payload[0].projects.blocks)
+      if(blocks){
+        setTasks(blocks.payload.blocks)
+      }
     });
     return ()=>{
       socket.current?.disconnect()}
@@ -378,7 +382,24 @@ function TaskMaker({callbackDeadline}){
         setError(res.errors);
       }
     }
-    return(<div className='overlay'>
+    const [chatOnOff, chatSet] = useState(false)
+    const [messages, setMessages] = useState(undefined)
+    async function chatActivator(activator){
+      if(activator){
+        chatSet(activator)
+        setMessages(await getMessage('block', projectId, afterProjects, blockId))
+      }
+    }
+    // const chatActivator = useCallback(async(activator)=>{
+    //   if(activator){
+    //     chatSet(activator)
+    //     console.log((1))
+    //   }else{
+    //     console.log('0')
+    //   }
+    // })
+    return(
+    <div className='overlay'>    
       <div className='modal'>
         <div className='task_manager_header'>
           <p className='task_manager_title'>Task manager</p>
@@ -390,7 +411,10 @@ function TaskMaker({callbackDeadline}){
         <div className='container'>
           <div className='tasks'>
           <div className = 'styler_container'>
-              <div className='block_title' style={{color: tasks_[blockId].mood}}><p>{tasks_[blockId].method}</p></div>
+              <div className='block_title' style={{color: tasks_[blockId].mood}}><p>{tasks_[blockId].method}</p>
+              <Image src ={'/images/icons/chat_0_2.png'} alt={''} height={25} width={30}
+              onClick={()=>chatActivator(true)}></Image>
+              </div>
               <hr></hr>
                 <div className='block_with_tasks'>
                   {Object.values(tasks_[blockId].tasks.title || {}).map((task, index) => {
@@ -414,8 +438,8 @@ function TaskMaker({callbackDeadline}){
                 >Delete Block</button>
             </div>
             {<TaskDirection edit={edit} object_={object} task_id={tasks_id} mood={tasks_[blockId].mood} email={email} teamsForAssign={callBack} project={afterProjects} block={tasks_[blockId].method}
-            projectId = {projectId}
-            />}
+            blockId = {blockId} projectId = {projectId} chatOnOff = {chatOnOff} chatSet={chatSet} messages={messages}/>}
+            {/* set activator for module chats */}
           </div>{/*tasks*/}
         </div>
       </div>
@@ -475,7 +499,7 @@ function TaskMaker({callbackDeadline}){
 )
 }
 
-function TaskDirection({edit, object_, task_id, mood, email, teamsForAssign, project, block, projectId}){
+function TaskDirection({edit, object_, task_id, mood, email, teamsForAssign, project, block, projectId, chatOnOff, chatSet, blockId, messages}){
   const [today, setToday] = useState('');
   const today_base = object_?.deadline[task_id]?.start || ''
   
@@ -607,6 +631,7 @@ function TaskDirection({edit, object_, task_id, mood, email, teamsForAssign, pro
   const [emps, setEmps] = useState([])
   return(
     <div className='tasks_direction'>
+        {chatOnOff ? <ModalChat deactivation={chatSet} type='block' projectId={projectId} project={project} block={blockId} messages={messages}></ModalChat> : null}
         <p style={{fontWeight: '500', fontSize: '1.4em', margin: '1em', marginBottom: '0.2em', color:'#0e1d49'}}>{edit} task</p>
       <p style={{fontSize:'1em', marginLeft:'1.5em', color:'#575c67'}}>Title</p>
       <input className='inputForm' value={title || ''} onChange={(e)=>{setTitle(e.target.value)}}></input>
@@ -621,18 +646,18 @@ function TaskDirection({edit, object_, task_id, mood, email, teamsForAssign, pro
             <div className='assigness_block'>
               <p>Teams</p>
               <div className='assigness'>
-              {newEmp!=undefined && newEmp.value.length>0 ? newEmp.label.slice(0, 3).map((items, index) => {
+              {newEmp!=undefined && newEmp.value.length>0 ? newEmp.label.slice(0, 5).map((items, index) => {
                   return <div className='member' style={{backgroundColor: mood}} key={projectId.id+index+'d'}><span>
                     {items.length>10 ? items.slice(0, 9)+"..." : items}
                   <Image src='/images/icons/delete_emp.png' width={10} height={10} alt='' style={{marginLeft: '0.3em', cursor: 'pointer'}} onClick={()=>{deleteEmp(items, index)}}></Image></span></div>
-              }) : <span style={{color: 'black'}}>No one here, you can add team.</span>}
-              {newEmp.value.length > 3 ? <div style={{display: 'flex', alignItems: 'center', color: '#76789c', width: '7em', height:'1.5em', backgroundColor: '#e9e9f2', borderRadius: '0.5em',
+              }) : <span style={{color: 'black', width: '100%', whiteSpace: 'word-wrap', position: 'initial'}}>No one here, you can add team.</span>}
+              {newEmp.value.length > 5 ? <div style={{display: 'flex', alignItems: 'center', color: '#76789c', width: '7em', height:'1.5em', backgroundColor: '#e9e9f2', borderRadius: '0.5em',
                 justifyContent: 'center', cursor:  'pointer'
               }} onMouseEnter={()=>{setEmps(newEmp.value); setShowMore(true)}} onMouseLeave={()=>{setShowMore(false)}}><span>more..</span></div> : ''
               }
               {showMore &&(
                 <div style={{width: '13em', height: 'auto', padding: '1em', backgroundColor:'#F8F8FF', borderRadius:'1em',border:'2px solid silver', zIndex: '90', position: 'absolute', marginLeft: '14em', marginTop: '-1em'}} onMouseEnter={()=>{setShowMore(true)}} onMouseLeave={()=>{setShowMore(false)}}>
-                  {emps.slice(3).map((i, index)=>{
+                  {emps.slice(5).map((i, index)=>{
                     return(<React.Fragment key={i+index} style={{display: 'flex', alignItems:'center'}}><span style={{color: mood}}>{i.length > 15 ? i.slice(0, 15)+'..' : i}</span>
                     <Image src='/images/icons/exit_png.png' width={15} height={16} alt='' style={{marginLeft: '0.2em', cursor: 'pointer', marginTop: '0.5em'}} onClick={()=>{
                       deleteEmp(i, index+3)
@@ -655,6 +680,7 @@ function TaskDirection({edit, object_, task_id, mood, email, teamsForAssign, pro
             <span className='date_text'>To</span>
             <input className='date' type='date' name='date_end' value={tomorrow} onChange={(e) => setTomorrow(e.target.value)}></input>
           </div>
+
           <div className='block_create'>
 
            {edit === 'Edit' && (

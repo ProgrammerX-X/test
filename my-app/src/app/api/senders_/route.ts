@@ -71,3 +71,11 @@ export async function decrypt_token(token: string){
         return {status: error_show(error)}
     }
 }
+export async function GET() {
+    return new Response(JSON.stringify({ 
+        message: 'API is working. Use POST to send emails.' 
+    }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' }
+    });
+}

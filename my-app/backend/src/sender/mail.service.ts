@@ -1021,8 +1021,7 @@ export class jwtAuth{
             );
     
         const blocks_ = await this.getBlocks.getBlocksFunction(email, project);
-        this.taskGateway.upBlocks({payload: blocks_
-        })
+        this.taskGateway.upBlocks({payload: blocks_}, email, token, projectId)
         return []
     }else{
         return ["You don`t have permissions."]

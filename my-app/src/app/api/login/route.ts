@@ -70,6 +70,7 @@ async function check_db(email: string, password: string){
         await db_client.connect()
         const ans = await db_client.db('login').collection('users').findOne({email: email})
         const ans_ = await db_client.db('login').collection('users').findOne({confirmed: false, email: email})
+        const pass_check = await db_client.db('login').collection('users').findOne({email: email, password: argon2.verify(ans?.password, password)})
         if(ans_ != null){
             Object.assign(resp, {params:"ok"})
         }else{
@@ -77,12 +78,13 @@ async function check_db(email: string, password: string){
                 if(await argon2.verify(ans?.password, password) === false){
                     Object.assign(resp, {password: 'Password invalid. Check it please.', params:"not ok"})
                 }else{
-                    Object.assign(resp, {params:"ok"})
+                    pass_check === null ? Object.assign(resp, {password: 'Invalid password', params: 'not ok'}) : Object.assign(resp, {params: 'ok'})
+                    // Object.assign(resp, {params:"ok"})
                 }
             }else{
                 Object.assign(resp, {email: 'Invalid email.', params:"not ok"})
             }
-
+            console.log(resp)
         }
         return resp
     }catch(err){
