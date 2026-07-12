@@ -22,14 +22,12 @@ function LoginForm(){
             })
         });
         const resp = await response.json()
-        if(resp.err_db.email){
+        if(resp.err_db.email != null & resp.err_db.email != undefined){
             setError({email: resp.err_db.email})
-        }else if(resp.err_db.email){
-            setError(resp.err_db.email)
+        }else{
+            setError({password: resp.err_db.password})
         }
-        else{
-            setError(resp.err.err)
-        }
+        console.log(resp)
         if(resp.err.params === 'ok' && resp.err_db.params  === 'ok'){
             window.location.href = '/confirmation'
         }
