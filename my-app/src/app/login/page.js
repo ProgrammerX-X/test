@@ -24,8 +24,8 @@ function LoginForm(){
         const resp = await response.json()
         if(resp.err_db.email){
             setError({email: resp.err_db.email})
-        }else if(err.err_db.password){
-            setError(err.err_db.password)
+        }else if(resp.err_db.email){
+            setError(resp.err_db.email)
         }
         else{
             setError(resp.err.err)

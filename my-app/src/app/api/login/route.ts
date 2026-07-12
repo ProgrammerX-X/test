@@ -78,8 +78,8 @@ async function check_db(email: string, password: string){
                 if(await argon2.verify(ans?.password, password) === false){
                     Object.assign(resp, {password: 'Password invalid. Check it please.', params:"not ok"})
                 }else{
-                    pass_check === null ? Object.assign(resp, {password: 'Invalid password', params: 'not ok'}) : Object.assign(resp, {params: 'ok'})
-                    // Object.assign(resp, {params:"ok"})
+                    // pass_check === null ? Object.assign(resp, {email: 'Invalid password', params: 'not ok'}) : Object.assign(resp, {params: 'ok'})
+                    Object.assign(resp, {params:"ok"})
                 }
             }else{
                 Object.assign(resp, {email: 'Invalid email.', params:"not ok"})

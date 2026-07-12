@@ -46,3 +46,4 @@ package-lock.json
 package.json
 tsconfig.json
 .gitignore
+next.config.ts
