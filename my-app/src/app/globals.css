@@ -18,11 +18,22 @@ input:-webkit-autofill:active {
     box-sizing: border-box;
     /* overflow-x: hidden; */
 }
+body{
+    overflow-y:hidden
+}
+
+@media(max-width: 768px){
+    body{
+        overflow-y:auto
+    }
+}
 /* header */
 .header{
+    position:relative;
     display: flex;
     box-shadow: 5px 10px 20px rgba(0, 0, 0, 0.250);
     align-items: center;
+    z-index:2
 }
 .icon{
     padding: 0.7em;
@@ -53,7 +64,7 @@ input:-webkit-autofill:active {
 }
 
 .main-content{
-    min-height: 75vh;
+    min-height: 100vh;
     flex: 1;
 }
 
@@ -68,11 +79,75 @@ input:-webkit-autofill:active {
     color: white;
     font-family: "REM";
     font-size: 1.1em;
-    position: relative
-    /* margin-top: 23vh; */
+    position: fixed;
 }
 .footer_menu{
     display: flex;
     cursor: pointer;
     align-items: center;
+}
+/* 
+@media (min-width: 1920px) {
+    .menu_comp{
+        color: rgb(81, 80, 80);
+        transition: color 1000ms ease;
+        font-family: "REM";
+        font-size: 0.23em;
+        text-decoration: none;
+        font-weight: 700; 
+    }
+    .footer{
+        height: 6em;
+        width: 100%;
+        bottom: 0;
+        color: white;
+        font-family: "REM";
+        font-size: 1.3em;
+    }
+} */
+
+@media (max-width: 768px) {
+    .menu_comp{
+        color: rgb(81, 80, 80);
+        transition: color 1000ms ease;
+        font-family: "REM";
+        font-size: 0.17em;
+        text-decoration: none;
+        font-weight: 700; 
+    }
+    .footer{
+        height: 6em;
+        width: 100%;
+        bottom: 0;
+        color: white;
+        font-family: "REM";
+        font-size: 0.9em;
+    }
+}
+@media (max-width: 480px) {
+    .menu_comp{
+        color: rgb(81, 80, 80);
+        transition: color 1000ms ease;
+        font-family: "REM";
+        font-size: 0.15em;
+        text-decoration: none;
+        font-weight: 700;
+    }
+    .footer{
+        font-size: 0.7em;
+    }
+    .icon{
+        padding:0em;
+        cursor: pointer;
+        width: 70%;
+        margin-right:0
+    }
+}
+
+.createBlockTitle{
+    font-weight: 500;
+    font-size: 1.4em;
+    margin: 1em;
+    margin-bottom: 0.2em;
+    color: #0e1d49
 }

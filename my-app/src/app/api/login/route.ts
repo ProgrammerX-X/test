@@ -6,6 +6,7 @@ import argon2 from 'argon2'
 import { cookies } from "next/headers"
 import {getLimit} from '../lib_redis/redis_connect'
 import { NextRequest } from "next/server"
+import fs from 'fs/promises'
 export async function POST(request:NextRequest){
     let data = await getLimit(request)
     let success = data.success
@@ -14,10 +15,11 @@ export async function POST(request:NextRequest){
             const req = await request.json()
             const err = await valid_data(req['email'], req['password'])
             let err_check_db;
-            if (err['err'] == ''){
+            if (err.err!=undefined && err.err == ''){
                 err_check_db = await check_db(req['email'], req['password'])
             }
-            if (err_check_db!.err === 'no_err' && err_check_db!.params === 'ok'){
+            // console.log(err_check_db)
+            if (err_check_db!==undefined && err_check_db.err === 'no_err' && err_check_db.params === 'ok'){
                 await cookie_setter('error', '' as string, '/confirmation', 0)
                 await cookie_setter('email', '' as string, '/api/confirmation', 0)
                 await cookie_setter('email', '' as string, '/', 0)
@@ -33,6 +35,15 @@ export async function POST(request:NextRequest){
         }
     }catch(error){
         const err = error_show(error)
+        try {
+            await fs.access('./logs');
+        } catch {
+            await fs.mkdir('./logs', { recursive: true });
+        }
+        await fs.appendFile(
+        './logs/logFile.txt', 
+        `${new Date().toLocaleString()}, ${await err}\n`
+    );
         return Response.json({status: 500, err: err, err_db: ''})
     }
 }
@@ -54,6 +65,7 @@ async function valid_data(email: string, password: string){
             Object.assign(resp, {password: 'Password invalid, check it please.'})
         }
         Object.assign(resp, {params: params.params})
+        console.log(resp)
         return resp
     }catch(error){
         return {err: error_show(error), params: params}
@@ -67,7 +79,9 @@ async function check_db(email: string, password: string){
         db_client = new MongoClient(process.env.DB_LOGIN as string, {
             serverSelectionTimeoutMS: 3500,
         })
+        console.log(db_client)
         await db_client.connect()
+        console.log(db_client, 83)
         const ans = await db_client.db('login').collection('users').findOne({email: email})
         const ans_ = await db_client.db('login').collection('users').findOne({confirmed: false, email: email})
         const pass_check = await db_client.db('login').collection('users').findOne({email: email, password: argon2.verify(ans?.password, password)})
@@ -84,7 +98,6 @@ async function check_db(email: string, password: string){
             }else{
                 Object.assign(resp, {email: 'Invalid email.', params:"not ok"})
             }
-            console.log(resp)
         }
         return resp
     }catch(err){

@@ -44,6 +44,18 @@
     font-family: "REM";
     border: none;
 }
+@media (max-width: 480px) {
+    .content{
+        margin-top:20%
+    }
+
+    .form_input{
+        width: 23em;
+    }
+    .reg{
+        font-size: 2.5em;
+    }
+}
 input[type="password"]::-ms-reveal {
   display: none;
 }

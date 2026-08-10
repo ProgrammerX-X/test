@@ -779,7 +779,8 @@ export class jwtAuth{
             'projects.proj.project_name': projectName,
             'projects.proj.team.label': oldTitle})
             if (resp){
-                let l = await cursor.updateOne(
+                // let l = 
+                await cursor.updateOne(
                     { 'projects.owner': owner, 'projects.proj.project_name': projectName },
                     { $set: { 'projects.proj.$[proj].team.$[team].label': title } },
                     {
@@ -999,29 +1000,37 @@ export class jwtAuth{
         // console.log(email, blockName, project, projectId, token)
         const owner_ = await user.findOne({email: email, 'projects.title': project}, {projection: {projects: 1}})
         let newProjectId = projectId
-    if (owner_ != null){
-        newProjectId = owner_.projects[0].id_proj
-    }
+        if (owner_ != null){
+            newProjectId = owner_.projects[0].id_proj
+        }
         const token_ = await checkToken(email, token)
         const roots_ = await checkRoots(email, project, newProjectId, ['admin'])
         if(token_ != null && roots_ != 0){
             const cursor = connection.collection('data')
-            const resp = await cursor.updateOne(
-                {
-                email: email,
-                'projects.title_proj': project,
-                },
-                {
-                $pull: {
-                    'projects.$.blocks': {
-                    method: blockName
+            if(owner_!=null){
+                await cursor.updateOne(
+                    {
+                    email: email,
+                    'projects.title_proj': project,
+                    },
+                    {
+                    $pull: {
+                        'projects.$.blocks': {
+                        method: blockName
+                        }
+                    } as any
                     }
-                } as any
-                }
-            );
-    
+                );
+            }else{
+                await cursor.updateOne({'projects.title_proj': project, 'projects.id_proj': new ObjectId(projectId)}, 
+                {$pull: {
+                        'projects.$.blocks': {
+                        method: blockName
+                        }
+                    } as any})
+            }
         const blocks_ = await this.getBlocks.getBlocksFunction(email, project);
-        this.taskGateway.upBlocks({payload: blocks_}, email, token, projectId)
+        // this.taskGateway.upBlocks({payload: blocks_}, email, token, projectId)
         return []
     }else{
         return ["You don`t have permissions."]
@@ -1132,7 +1141,8 @@ export class jwtAuth{
                 }
         const tasks = await getBlocksFunction_socket(email, project, projectId)
         // console.log(tasks, 1127)
-        this.taskGateway.updateTasks(tasks);
+        // SOCKET IO
+        // this.taskGateway.updateTasks(tasks, email, projectId, token);
         return errors
         }
     }else{
@@ -1216,7 +1226,7 @@ export class jwtAuth{
         
         errors.push(error)
         const tasks = await getBlocksFunction_socket(email, project, projectId)
-        this.taskGateway.updateTasks(tasks);
+        // this.taskGateway.updateTasks(tasks, email, projectId, token);
         return errors
     }
     }
@@ -1278,8 +1288,9 @@ export class jwtAuth{
         }else{
             errors.push("You don`t have permissions.")
         }
-        const tasks = await getBlocksFunction_socket(email, project, projectId)
-        this.taskGateway.updateTasks(tasks)
+        // const tasks = await getBlocksFunction_socket(email, project, projectId)
+        // SOCKET IO
+        // this.taskGateway.updateTasks(tasks, email, projectId, token)
         return errors
     }
 }
@@ -1451,9 +1462,10 @@ export class EmailsService implements OnModuleInit {
             const owner = change.fullDocument?.projects?.owner;
             if (owner) {
                 const emails = await getEmails_forSockets('Unteamed', owner);
-                this.taskGateway.server.to(owner).emit('emailsUpdated', emails);
+                // SOCKET IO
+                // this.taskGateway.server.to(owner).emit('emailsUpdated', emails);
                 const projects = await getProjects_create_forSocket(owner)
-                this.taskGateway.server.to(owner).emit('projectAllUpdated', projects)
+                // this.taskGateway.server.to(owner).emit('projectAllUpdated', projects)
             }
         });
         const projects = connection.collection('projects')
@@ -1465,7 +1477,7 @@ export class EmailsService implements OnModuleInit {
             const owner = change.fullDocument?.email;
             if (owner) {
                 const projects = await getProjectsAll_socket(owner)
-                this.taskGateway.server.to(owner).emit('projectsGet', projects)
+                // this.taskGateway.server.to(owner).emit('projectsGet', projects)
                 // const emails = await getEmails_forSockets('Unteamed', owner);
                 // this.taskGateway.server.to(owner).emit('emailsUpdated', emails);
                 // const projects = await getProjects_create_forSocket(owner)
@@ -1492,7 +1504,7 @@ export class EmailsService implements OnModuleInit {
             const owner = change.fullDocument?.projects.owner
             if(owner){
                 const developers = await developers_forSockets(owner, '/projects/teams/modalTeams')
-                this.taskGateway.server.to(owner).emit('updateTeams', developers)
+                // this.taskGateway.server.to(owner).emit('updateTeams', developers)
                 // const getDevelopersForTeams = await getEmails_forSockets()
                 if (change.operationType === 'update') {
                     const updatedFields = change.updateDescription.updatedFields;

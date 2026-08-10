@@ -4,10 +4,11 @@ import { AppService } from './app.service';
 import { ProPanelHandlerModule } from './pro-panel_handler/pro-panel_handler.module';
 import {MailModule} from './sender/mail.module'
 import {ChatModule} from'./chat/chat.module'
+import { GuestModule } from './guest/guest.module';
 // import { TaskGateway } from './sender/task.gateway';
 
 @Module({
-  imports: [ProPanelHandlerModule, MailModule, ChatModule],
+  imports: [ProPanelHandlerModule, MailModule, ChatModule, GuestModule],
   controllers: [AppController],
   providers: [AppService],
 })

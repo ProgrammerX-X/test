@@ -1,6 +1,7 @@
 'use client'
 import './register.css'
 import { useState } from 'react'
+import { EnterLikeGuest } from '../components/components'
 function Content(){
   const [error, setError] = useState('')
   async function sender(event){
@@ -76,9 +77,11 @@ function Content(){
    {error?.repeat_password || error?.status_error || error?.error || ''}</p>
     <button className='button' type='submit'><span>OK</span></button>
     </form>
+    <EnterLikeGuest />
   </div>)
 }
 export default function Main_(){
     return(<Content />
     )
 }
+

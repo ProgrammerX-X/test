@@ -3,7 +3,11 @@ import { MongoClient, ObjectId } from 'mongodb';
 export async function checkToken(email: string, token: string){
     const cursor = connection.collection('data')
     const validation = await cursor.findOne({email: email, login: token})
-    return validation
+    if(validation!=null){
+        return 1
+    }else{
+        return null
+    }
 }
 
 export async function checkRoots(email: string, project: string, projectId: any, agreeRoots?: any){
@@ -13,7 +17,6 @@ export async function checkRoots(email: string, project: string, projectId: any,
         return 1
     }else{
         if (agreeRoots === undefined) return 0
-        // if (teams_in === undefined) return 0
         let teams = await roots.aggregate([
         { $unwind: '$projects.proj' },
         { $match: { 'projects.proj.project_name': project } },
@@ -41,6 +44,7 @@ export async function checkRoots(email: string, project: string, projectId: any,
             } 
         },
         ]).toArray()
+        // console.log(root)
         let rootIndex = teams[0].index;
         let roots_all: string[] = []
         root.map((i=>{
@@ -60,6 +64,7 @@ export async function checkRoots(email: string, project: string, projectId: any,
                 agree.push(0)
             }
         })
+        // console.log(agree)
         if(agree.includes(1)){
             return 1
         }else{

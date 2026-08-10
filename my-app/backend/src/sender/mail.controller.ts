@@ -6,7 +6,7 @@ import type { Response, Request } from 'express';
 // import { SECRET } from "src/pro-panel_handler/pro-panel_handler.controller";
 import signature from 'cookie-signature'
 // import { getEmails } from "./s";
-const SECRET_ = process.env.SECRET || 'rezervSECRET'
+const SECRET_ = process.env.SECRET
 @Controller('sender')
 export class SenderController {
   constructor(private readonly service: SenderMail, private readonly service_: jwtAuth) {}
@@ -17,11 +17,11 @@ export class SenderController {
       if (body.email === '' || body.email === null || body.email == undefined || !email_validation.test(body.email)){
         return {error: 'Email do not correct.'}
       }else{
-        let token = this.service_.generateToken(body.email, body.project, body.fromEmail)
+        let token = this.service_.generateToken(body.email, decodeURIComponent(body.project), body.fromEmail)
         let login_token = req.cookies.login
-        login_token = signature.unsign(login_token, SECRET_)
+        login_token = signature.unsign(login_token, SECRET_!)
         const subject = `${body.fromEmail} invited you in project!`
-        const html = `Click <a href = 'http://localhost:3000/sender/${token}'>HERE</a> for meeting <b>${body.project}</b>!`
+        const html = `Click <a href = "${process.env.DOMAIN}/sender/${token}">HERE</a> for meeting <b>${encodeURIComponent(body.project)}</b>!`
         const resp = await this.service.sendEmail(body.email, body.project, body.fromEmail, subject, html, login_token)
         return {error: resp.error}
       }
@@ -37,7 +37,6 @@ export class SenderController {
   }
   @Post('/confirm')
   async confirmEmail(@Body() body: any){
-
     let resp = await this.service_.verifyToken(body.token)
     if (resp!='Invalid token'){
       await this.service_.seed(resp.email)
@@ -105,9 +104,9 @@ export class SenderController {
     const emails = body.emails
     const guest = body.guest
     let token = req.cookies.login
-    token = signature.unsign(token, SECRET_)
+    token = signature.unsign(token, SECRET_!!)
     let email = req.cookies.email
-    email = signature.unsign(email, SECRET_)
+    email = signature.unsign(email, SECRET_!!)
     // console.log(email)
     // CHANGED!!!!!!!
     let resp = await this.service_.addMember(teamName, teamName, owner, project_name, emails, guest, body.type, true, token, email, false)
@@ -118,9 +117,9 @@ export class SenderController {
   let team = body.teamName
   let err = {error: ''}
   let token = req.cookies.login
-  token = signature.unsign(token, SECRET_)
+  token = signature.unsign(token, SECRET_!!)
   let email = req.cookies.email
-  email = signature.unsign(email, SECRET_)
+  email = signature.unsign(email, SECRET_!!)
   if (team === 'Unteamed'){
     // err = 
     err = await this.service_.deleteMember(body.teamName, body.owner, body.email, body.project_name, email, token)
@@ -133,9 +132,9 @@ export class SenderController {
   @Post('/edit')
   async editTeam(@Body() body: any, @Req() req: Request){
     let token = req.cookies.login
-    token = signature.unsign(token, SECRET_)
+    token = signature.unsign(token, SECRET_!!)
     let email = req.cookies.email
-    email = signature.unsign(email, SECRET_)
+    email = signature.unsign(email, SECRET_!!)
 
     let l = await this.service_.editTeam(body.title, body.oldTitle, body.owner, body.guest, body.projectName, token, email)
     return {status:"200", error: l?.error}
@@ -143,7 +142,7 @@ export class SenderController {
   @Post('/editRole')
   async editRole(@Body() body: any, @Req() req:Request){
     let token = req.cookies.login
-    token = signature.unsign(token, SECRET_)
+    token = signature.unsign(token, SECRET_!!)
     let l = await this.service_.editRoles(body.projectName, body.teamName, body.owner, body.roles, body.oldRole, 
       body.email, body.guest, body.emailIndex, token)
     return {status: 200, error: l.error}
@@ -151,9 +150,9 @@ export class SenderController {
   @Post('/deleteTeam')
   async deleteTeam(@Body() body: any, @Req() req:Request){
     let token = req.cookies.login
-    token = signature.unsign(token, SECRET_)
+    token = signature.unsign(token, SECRET_!!)
     let email = req.cookies.email
-    email = signature.unsign(email, SECRET_)
+    email = signature.unsign(email, SECRET_!!)
     if(body.teamName != 'Unteamed'){
       let r = await this.service_.deleteTeam(body.teamName, body.projectName, email, token)
       return {status: 200, error: r.error}
@@ -177,7 +176,7 @@ export class SenderController {
       return {error: 'Write correct data.'}
     }else{
       let token = req.cookies.login
-      token = signature.unsign(token, SECRET_)
+      token = signature.unsign(token, SECRET_!!)
       let error = await this.service_.createTeam(body.owner, body.title, body.project, body.members, token)
       // console.log(183, body.members)
       return {error: error.error}
@@ -196,15 +195,15 @@ export class SenderController {
   @Post('/deleteBlock')
   async deleteblock(@Body() body: any, @Req() req: Request){
     let response = req.cookies.login
-    response = signature.unsign(response, SECRET_)
-    let errors = await this.service_.deleteBlock(body.email, body.blockName, body.project, body.projectId, response)
+    response = signature.unsign(response, SECRET_!!)
+    let errors = await this.service_.deleteBlock(body.email, body.blockName, decodeURIComponent(body.project), body.projectId, response)
     return {errors: errors}
   }
   @Post('/create_task')
   async createTask(@Body() body: any, @Req() req: Request){
     let response = req.cookies.login
-    response = signature.unsign(response, SECRET_)
-    let resp = await this.service_.createTask(body.email, body.project, body.title, body.direction, body.developers, body.deadline, body.block, body.projectId, response)
+    response = signature.unsign(response, SECRET_!!)
+    let resp = await this.service_.createTask(body.email, decodeURIComponent(body.project), body.title, body.direction, body.developers, body.deadline, body.block, body.projectId, response)
     return{errors: resp}
   }
   @Post('/updateTask')
@@ -213,34 +212,34 @@ export class SenderController {
     //   body.oldTitle, body.oldDescription, body.oldDevelopers, body.oldDate
     // )
     let response = req.cookies.login
-    response = signature.unsign(response, SECRET_)
-    let resp = await this.service_.updateTask(body.email, body.project, body.block, body.task, body.title, body.description, body.developers, body.date, body.projectId, response
+    response = signature.unsign(response, SECRET_!!)
+    let resp = await this.service_.updateTask(body.email, decodeURIComponent(body.project), body.block, body.task, body.title, body.description, body.developers, body.date, body.projectId, response
     )
     return {errors: resp}
   }
   @Post('/deleteTask')
   async deleteTask(@Req() req:Request, @Body() body: any){
     let response = req.cookies.login
-    response = signature.unsign(response, SECRET_)
-    let resp = await this.service_.deleteTask(body.email, body.projectId, body.project, body.block, body.task_id, response)
+    response = signature.unsign(response, SECRET_!!)
+    let resp = await this.service_.deleteTask(body.email, body.projectId, decodeURIComponent(body.project), body.block, body.task_id, response)
     return {errors: resp}
   }
   @Post('/taskDone')
   async taskD(@Body() body:any, @Req() req: Request){
     // console.log(body.email, body.project, body.projectId, body.block, body.task_id, body.checkboxStatus, 204)
     let token = req.cookies.login
-    token = signature.unsign(token, SECRET_)
-    let error = await this.service_.taskDone(body.email, body.project, body.projectId, body.block, body.task_id, body.checkboxStatus, token)
+    token = signature.unsign(token, SECRET_!!)
+    let error = await this.service_.taskDone(body.email, decodeURIComponent(body.project), body.projectId, body.block, body.task_id, body.checkboxStatus, token)
     return {error: error.error}
   }
   @Post('deleteTeamFromTask')
   async deleteTeamFromTask(@Body() body: any, @Req() req: Request){
     const email = req.cookies.email
     const token = req.cookies.login
-    const emailUnsign = signature.unsign(email, SECRET_)
-    const tokenUnsign = signature.unsign(token, SECRET_)
+    const emailUnsign = signature.unsign(email, SECRET_!!)
+    const tokenUnsign = signature.unsign(token, SECRET_!!)
     if(emailUnsign != false && tokenUnsign != false){
-    let errors = await this.service_.deleteTeamFromTask(emailUnsign, body.project, body.block, body.task_id, body.index, tokenUnsign, body.projectId, body.emp)
+    let errors = await this.service_.deleteTeamFromTask(emailUnsign, decodeURIComponent(body.project), body.block, body.task_id, body.index, tokenUnsign, body.projectId, body.emp)
     // console.log(errors, 247)
     return {status: errors.error}}
     else{
@@ -252,8 +251,8 @@ export class SenderController {
     const email = req.cookies.email
     const token = req.cookies.login
     if((email!=undefined && email != null) && (token!=null || token != undefined)){
-      const emailUnsign = signature.unsign(email, SECRET_)
-      const tokenUnsign = signature.unsign(token, SECRET_)
+      const emailUnsign = signature.unsign(email, SECRET_!!)
+      const tokenUnsign = signature.unsign(token, SECRET_!!)
       if(emailUnsign && tokenUnsign){
         const resp_ = await this.service_.accountData(emailUnsign, tokenUnsign)
         return {status: resp_}
@@ -269,8 +268,8 @@ export class SenderController {
     const email = req.cookies.email
     const token = req.cookies.login
     if((email!=undefined && email != null) && (token!=null || token != undefined)){
-      const emailUnsign = signature.unsign(email, SECRET_)
-      const tokenUnsign = signature.unsign(token, SECRET_)
+      const emailUnsign = signature.unsign(email, SECRET_!!)
+      const tokenUnsign = signature.unsign(token, SECRET_!!)
       if(emailUnsign && tokenUnsign){
         const newEmail = body.newEmail
         const resp_ = await this.service_.editOwner(emailUnsign, newEmail, tokenUnsign)
@@ -292,8 +291,8 @@ export class SenderController {
       res.clearCookie(cookieName, { path: '/' });
     });
     if((email!=undefined && email != null) && (token!=null || token != undefined)){
-      const emailUnsign = signature.unsign(email, SECRET_)
-      const tokenUnsign = signature.unsign(token, SECRET_)
+      const emailUnsign = signature.unsign(email, SECRET_!!)
+      const tokenUnsign = signature.unsign(token, SECRET_!!)
       if(emailUnsign && tokenUnsign){
         const resp = await this.service_.deleteAccount(emailUnsign, tokenUnsign)
         return {status: resp}
@@ -310,8 +309,8 @@ export class SenderController {
     const cookies_token = req.cookies.login
     if(cookies_email != undefined && cookies_token != undefined){
       // console.log(cookies_email)
-      const email = signature.unsign(cookies_email, SECRET_)
-      const token = signature.unsign(cookies_token, SECRET_)
+      const email = signature.unsign(cookies_email, SECRET_!!)
+      const token = signature.unsign(cookies_token, SECRET_!!)
       if(email&&token){
         const access = await this.service_.checkLogin(email, token)
         if(access){

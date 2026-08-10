@@ -2,19 +2,21 @@
     display: flex;
     border-radius: 1.5em;
     background-color: white;
-    height: 33em;
+    height: 30em;
     width: 15em;
     border: 1px solid #ebebf3;
     margin: 2em;
     margin-right: 0;
-    box-shadow: -6px 4px 10px #bcc4d6;
+    z-index: 2;
+    position:relative;
+    box-shadow: 0px 4px 10px #bcc4d6;
 }
 .list_inside{
     position: relative;
     margin: 0.5em;
     width: 100%;
     border-radius: 1.2em;
-    box-shadow: -5px 1px 9px #d8dce7;
+    box-shadow: 0px 1px 9px #d8dce7;
     background-color: white;
 }
 
@@ -46,4 +48,38 @@
 .href{
     color: #233049;
     text-decoration: none;
+}
+
+.burger{
+    background-image: url("/images/icons/burgerMenu.png");
+    width: 2.5em;
+    height: 2em;
+    background-repeat: no-repeat;
+    margin:1em;
+    position:fixed;
+    z-index:1
+}
+
+@media(min-height: 1920px){
+    .list{
+        height: 40em;
+        width: 20em;
+    }
+    .list_inside{
+        width: 100%;
+    }
+    .functions{
+        font-size: 1.4em;
+        margin-left: 1em;
+        list-style: none;
+    }
+}
+@media (max-width: 431px) {
+    .list{
+        height: 20em;
+        width:13em
+    }
+    .functions{
+        font-size: 1em;
+    }
 }

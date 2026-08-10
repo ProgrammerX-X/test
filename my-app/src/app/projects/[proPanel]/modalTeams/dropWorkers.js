@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import dynamic from 'next/dynamic';
 import {DndContext, PointerSensor, useSensor, useSensors } from '@dnd-kit/core'
 import { SortableContext, arrayMove } from '@dnd-kit/sortable';
@@ -206,9 +206,9 @@ const CustomMenuList = (props) => {
 
 
 export function GetRoles({callback, value, methods, width, containerStyle, type}) {
-const CheckboxOption = (props) => {
+  const CheckboxOption = (props) => {
   const { data, isSelected, innerRef, innerProps } = props;
-  
+
   return (
     <div ref={innerRef} {...innerProps} style={{ display: 'flex', alignItems: 'center', padding: '0.4em 0.4em' }}>
       <div style={{ position: 'relative' }}>
@@ -265,9 +265,11 @@ const CustomMultiValue = () => null;
     setTempSelected(selected)
   };
 
+const refMenu = useRef(null)
+
 const CustomMenuList = (props) => {
   return (
-    <components.MenuList {...props}>
+    <components.MenuList {...props} innerRef={refMenu}>
       {props.children}
       <div className='droplist_button'>
         <button className='button_style' onClick={()=>{callback(tempSelected)}}>Assign</button>
@@ -275,16 +277,21 @@ const CustomMenuList = (props) => {
     </components.MenuList>
   );
 };
-// useEffect(()=>{
-  // console.log(containerStyle_menu)
-// }, [])
-// console.log('containerStyle menu: ', containerStyle_menu, 278)
-
+const newRefMenu = useRef(0)
+if(refMenu.current){
+newRefMenu.current = refMenu.current.scrollTop
+}
+useEffect(()=>{
+  if(refMenu.current){
+    refMenu.current.scrollTop = newRefMenu.current
+  }
+}, [refMenu.current])
   let colors = ['#ffffff', '#ffffff', '#ffffff', '#ffffff', '#ffffff', '#ffffff']
   return (
     <Select
       options={methods}
       onChange={handleChange}
+      // onScroll={saveScroll}
       isMulti={type === 'checkbox'}
       menuIsOpen={menuIsOpen}
       onMenuOpen={handleMenuOpen}
@@ -321,8 +328,8 @@ const CustomMenuList = (props) => {
         }),
         menu: (base) => ({ 
           ...base, 
-          top: '2em',
           padding: 0,
+          top:'80%'
         }),
         group: (base) => ({
           ...base,

@@ -56,43 +56,43 @@ export function ModalCreateTeam({setVisibleCreateTeams, teams}){
         setProjects(resp_.projects)
         setError(resp_.error)
     }
-    
-    useEffect(()=>{
-            getAllProjects()
-    }, [email])
-    const socket = useRef(null)
-    useEffect(()=>{
-        socket.current = io(process.env.NEXT_PUBLIC_SERVER_DOMAIN)
-    return () => {
-        socket.current?.disconnect();
-    };
-    }, [])
+    // SOCKET IO
+    // useEffect(()=>{
+    //         getAllProjects()
+    // }, [email])
+    // const socket = useRef(null)
+    // useEffect(()=>{
+    //     socket.current = io(process.env.NEXT_PUBLIC_SERVER_DOMAIN)
+    // return () => {
+    //     socket.current?.disconnect();
+    // };
+    // }, [])
 
-    useEffect(()=>{
-        if(!email || !socket.current) return;
-        socket.current.emit('join', email)
-    }, [email])
+    // useEffect(()=>{
+    //     if(!email || !socket.current) return;
+    //     socket.current.emit('join', email)
+    // }, [email])
 
-    useEffect(() => {
-        if (!socket.current) return;
+    // useEffect(() => {
+    //     if (!socket.current) return;
 
-        const handleEmails = (emails) => {
-            setMethods(emails);
-        };
+    //     const handleEmails = (emails) => {
+    //         setMethods(emails);
+    //     };
 
-        const handleProjects = (projects) => {
-            setProjects(projects?.projects);
-            setError(projects?.error);
-        };
+    //     const handleProjects = (projects) => {
+    //         setProjects(projects?.projects);
+    //         setError(projects?.error);
+    //     };
 
-        socket.current.on("emailsUpdated", handleEmails);
-        socket.current.on("projectAllUpdated", handleProjects);
+    //     socket.current.on("emailsUpdated", handleEmails);
+    //     socket.current.on("projectAllUpdated", handleProjects);
 
-        return () => {
-            socket.current.off("emailsUpdated", handleEmails);
-            socket.current.off("projectAllUpdated", handleProjects);
-        };
-    }, []);
+    //     return () => {
+    //         socket.current.off("emailsUpdated", handleEmails);
+    //         socket.current.off("projectAllUpdated", handleProjects);
+    //     };
+    // }, []);
     const wasSubmittedRef = useRef(false);
     useEffect(() => {
         if (error_.length === 0 && wasSubmittedRef.current) {
@@ -193,15 +193,15 @@ export function AddMember({status, teamName, owner, project, type, guest, callBa
         }
         caller()
     }, [])
-
-    const socket = useRef(null)
-    useEffect(() => {
-        socket.current = io(process.env.NEXT_PUBLIC_SERVER_DOMAIN);
-        socket.current.on('emailsUpdated', (emails) => {
-            setEm(emails)
-        });
-        return () => socket.current?.disconnect();
-    }, [])
+    // SOCKET IO
+    // const socket = useRef(null)
+    // useEffect(() => {
+    //     socket.current = io(process.env.NEXT_PUBLIC_SERVER_DOMAIN);
+    //     socket.current.on('emailsUpdated', (emails) => {
+    //         setEm(emails)
+    //     });
+    //     return () => socket.current?.disconnect();
+    // }, [])
     return(
         <div style={{width: '100%', height: '100%', display: 'flex', zIndex: 1000}} onClick={()=>{setVisible_(false)}}>
             <div className='modal_addMember' onClick={(e) => e.stopPropagation()}>

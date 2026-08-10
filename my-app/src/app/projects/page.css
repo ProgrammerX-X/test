@@ -51,7 +51,7 @@
     overflow-y: hidden; 
     scrollbar-width: none;
     margin-left: 0em;
-    width: 70em;
+    width: 100%;
 }
 
 .handler{
@@ -115,7 +115,8 @@
     display: flex;
     margin-left: 2em;
     margin-top: 1em;
-    /* align-items: center */
+    margin-bottom: 1em;
+    align-items: center
 }
 
 .task_manager_title_{
@@ -155,6 +156,7 @@
     margin-top: .7em;
     font-family: REM;
     font-size: 1em;
+    padding:0.5em
 }
 .input_:focus{
     outline: 1px solid #c9cbd8;
@@ -165,7 +167,7 @@
     height: 3em;
     display: flex;
     position: relative;
-    right: 2em;
+    margin-right: 2em;
     margin-top: 1em
 }
 .agree_button{
@@ -183,4 +185,67 @@
     display: flex;
     align-items: center;
     color:#0e1d49;
+}
+
+@media(max-width: 768px){
+    .project_block{
+        display: flex;
+        flex-direction: row;
+        align-items: start;
+    }
+    .main_{
+        flex-direction: column;
+        align-items: center;
+        margin-bottom:3em
+    }
+    .saver{
+        width: 7em;
+        height: 3em;
+    }
+    .handler{
+        margin-top: 3em;
+    }
+}
+
+@media (min-width: 768px) {
+    .project_block{
+        display: flex;
+        flex-direction: row;
+        align-items: start;
+    }
+}
+
+@media(max-width:891px){
+    .modal_{
+        width: 80%;
+        /* height:50% */
+    }
+    .agree_button{
+        height: 3.5em;
+        padding: 0.5em
+    }
+}
+@media(max-width:420px){
+    .modal_{
+        width: 80%;
+        /* height:50% */
+    }
+    .agree_button{
+        height: 3.5em;
+        width: 90%;
+        padding: 0.5em;
+    }
+    .agree{
+        justify-content: center;
+        align-items: center;
+        width: 80%;
+        height: 3em;
+        display: flex;
+        position: relative;
+        margin-right: 0;
+        margin-top: 1em
+    }
+    .title_dir{
+        font-size: 1.1em;
+    }
 }

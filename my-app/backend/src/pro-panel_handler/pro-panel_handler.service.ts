@@ -25,6 +25,8 @@ export class ProPanelHandlerService {
   ) {}
 
   async getBlocksFunction(email: string, project: string) {
+    // project = decodeURIComponent(project)
+    // console.log(project, 29)
   const result = await this.dataBase.aggregate([
     { $match: { "email": email } },
     { $unwind: "$projects" },
@@ -47,21 +49,21 @@ export class ProPanelHandlerService {
       return blocks_[0].projects
     }
     else{
-      let newProject = decodeURIComponent(project)
-      if(newProject!=null && newProject!=undefined && newProject!=''){
-        const projectOwner = await this.dataBase_.findOne({'email': email, 'projects.title': newProject})
+      // let newProject = decodeURIComponent(project)
+      if(project!=null && project!=undefined && project!=''){
+        const projectOwner = await this.dataBase_.findOne({'email': email, 'projects.title': project})
         if(projectOwner==null){
-          const projectOwner = await this.dataBase_.findOne({'email': email, 'somelProjects.project': newProject})
+          const projectOwner = await this.dataBase_.findOne({'email': email, 'somelProjects.project': project})
           if(projectOwner === null){
             return "redirect"
           }else{
             await client.close()
-            return await this.getBlocksFunction(email, newProject)
+            return await this.getBlocksFunction(email, project)
           }
         }        
         else{
           await client.close()
-          return await this.getBlocksFunction(email, newProject)
+          return await this.getBlocksFunction(email, project)
         }
       }else{
         await client.close()
@@ -90,6 +92,8 @@ export class ProPanelHandlerService {
     const user_data = connection.collection('data')
     const owner = await user.findOne({email: email, 'projects.title': oldTitle}, {projection: {projects: 1}})
     if(newTitle === oldTitle && newDirection === oldDirection) return {error: "Make some changes."}
+    const alreadyChaged = await user.findOne({email:email, 'projects.title':newTitle}, {projection: {projects:1}})
+    if(alreadyChaged!=null) return {error: "Already changed!"}
     let newProjectId = projectId
     if (owner != null){
       newProjectId = owner.projects[0].id_proj
@@ -134,6 +138,8 @@ export class ProPanelHandlerService {
           'projects.proj.$.project_name': newTitle
         } 
       })
+      const chats = connection.collection('chat')
+      let resp = await chats.updateMany({'ownerEmail':email, 'project': oldTitle, idProject: newProjectId.toString()}, {$set:{project: newTitle}})
       // const projects_ = await this.getAllProjects(email)
       // this.taskGateway.server.to(email).emit('getProjects', projects_)
       return {error: ''}
@@ -214,6 +220,7 @@ export class ProPanelHandlerService {
 
   async pushBlock(email: string, mood: string, project: string, title: string, projectId:string, token:string){
     const token_ = await checkToken(email, token)
+    // project = decodeURIComponent(project)
     const roots_ = await checkRoots(email, project, projectId, ['admin'])
     const id_ = new ObjectId(projectId)
     if(token_!=null && roots_ != 0){
@@ -252,7 +259,7 @@ export class ProPanelHandlerService {
         { 
           $push: { 
             'projects.$.blocks': { 
-              id: (length+1).toString(),
+              id: new ObjectId(),
               method: title,
               mood: mood,
               tasks: {title:[''], direction: [''], developers: [], deadline: [], isChecked:[]}
@@ -260,7 +267,8 @@ export class ProPanelHandlerService {
           } as any
         })
         const blocks_ = await this.getBlocksFunction(email, project);
-        this.taskGateway.upBlocks({payload: blocks_}, email, token, projectId);
+        // SOCKET IO
+        // this.taskGateway.upBlocks({payload: blocks_}, email, token, projectId);
         return {error: ''}
       }else{
         return {error: 'This block exists. Try another name.'}
@@ -309,32 +317,38 @@ export class ProPanelHandlerService {
         'projects.proj': { project_name: title }
       } as any})
       const projects_ = await getAllProjectsSocket(email)
-      this.taskGateway.server.to(email).emit('getProjects', projects_)
+      const chat = connection.collection('chat')
+      // let resp = 
+      await chat.deleteMany({'ownerEmail':email, 'project': title})
+      // console.log(resp)
+      // SOCKET IO
+      // this.taskGateway.server.to(email).emit('getProjects', projects_)
       return {error: ''}
     }else{
       return {error: "You don`t have permissions."}
     }
   }
 }
-@Injectable()
-export class EmailsService implements OnModuleInit {
-    constructor(
-        private readonly taskGateway: TaskGateway,
-    ) {}
-    async onModuleInit() {
-        const collection = connection.collection('projects');
-        collection.watch([], { fullDocument: 'updateLookup' }).on('change', async (change) => {
-            if (change.operationType != 'insert' &&
-                change.operationType != 'update') {
-            return;
-            }
-            const owner = change.fullDocument?.email;
-            if (owner) {
-              const projects = await getAllProjectsSocket(owner)
-              this.taskGateway.server.to(owner).emit('projectsUpdate', projects)              
-              this.taskGateway.server.to(owner).emit('projectsGet', projects)
-            }
-        });
+// SOCKET IO
+// @Injectable()
+// export class EmailsService implements OnModuleInit {
+//     constructor(
+//         private readonly taskGateway: TaskGateway,
+//     ) {}
+//     async onModuleInit() {
+//         const collection = connection.collection('projects');
+//         collection.watch([], { fullDocument: 'updateLookup' }).on('change', async (change) => {
+//             if (change.operationType != 'insert' &&
+//                 change.operationType != 'update') {
+//             return;
+//             }
+//             const owner = change.fullDocument?.email;
+//             if (owner) {
+//               const projects = await getAllProjectsSocket(owner)
+//               this.taskGateway.server.to(owner).emit('projectsUpdate', projects)              
+//               this.taskGateway.server.to(owner).emit('projectsGet', projects)
+//             }
+//         });
         
-    }
-}
+//     }
+// }

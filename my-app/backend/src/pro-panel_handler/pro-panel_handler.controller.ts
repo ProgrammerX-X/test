@@ -7,16 +7,15 @@ import signature from 'cookie-signature'
 import * as dotenv from 'dotenv';
 dotenv.config();
 // import {getBlocksFunction} from './pro-panel_handler.service'
-const SECRET_ = process.env.SECRET || 'rezervSECRET'
+const SECRET_ = process.env.SECRET
 @Controller('proPanel')
 export class ProPanelHandler {
   constructor(private readonly service: ProPanelHandlerService) {}
   
   @Post()
   async blockReturn(@Body('email') email: string, @Body('project') project: string) {
-    // console.log(email, project, 15)
+    project = decodeURIComponent(project)
     let resp = await this.service.getBlocksFunction(email, project);
-    // console.log(resp.blocks[0].tasks.direction, 19)
     if (resp==='redirect'){
       return {resp: 'redirect'}
     }else{
@@ -26,7 +25,7 @@ export class ProPanelHandler {
   @Get('/get_email')
   async getEmail(@Req() req: Request){
     let response = req.cookies.email
-    let cookies_all = signature.unsign(response, SECRET_)
+    let cookies_all = signature.unsign(response, SECRET_!)
     return {response: cookies_all}
   }
   @Post('/projects')
@@ -37,7 +36,7 @@ export class ProPanelHandler {
   @Post('/edit_projects')
   async editProjects(@Body() body: any, @Req() req: Request){
     let response = req.cookies.login
-    response = signature.unsign(response, SECRET_)
+    response = signature.unsign(response, SECRET_!)
     let resp = {error: ''}
     if(body.newTitle.trim() === 'teams'){
       return {error: 'Please, check another title.'}
@@ -53,8 +52,8 @@ export class ProPanelHandler {
     let title = body.title.trim()
     let email = req.cookies.email
     let response_ = req.cookies.login
-    response_ = signature.unsign(response_, SECRET_)
-    email = signature.unsign(email, SECRET_)
+    response_ = signature.unsign(response_, SECRET_!)
+    email = signature.unsign(email, SECRET_!)
     if(title === '' || title === undefined || body.direction==='' || body.direction === undefined){
       return{status: {error:'Empty title or direction!'}}
     }else if(title==='teams'){
@@ -70,14 +69,14 @@ export class ProPanelHandler {
   async createBlock(@Body() body: any, @Req() req: Request){
     // console.log(body.email)
     let response = req.cookies.login
-    response = signature.unsign(response, SECRET_)
+    response = signature.unsign(response, SECRET_!)
     if (body.color == '' || body.color == undefined){
       body.color = '#000000'
     }
     if (body.title == ''){
       return {error: 'Enter name for your block'}
     }else{
-      let error = await this.service.pushBlock(body.email, body.color, body.project, body.title, body.projectId, response)
+      let error = await this.service.pushBlock(body.email, body.color, decodeURIComponent(body.project), body.title, body.projectId, response)
       // console.log(body)
       return {error: error.error}
     } 
@@ -85,7 +84,7 @@ export class ProPanelHandler {
   @Post('/deleteProject')
   async deleteProject(@Body() body: any, @Req() req: Request){
     let token = req.cookies.login
-    token = signature.unsign(token, SECRET_)
+    token = signature.unsign(token, SECRET_!)
     let error = await this.service.deleteProj(body.email, body.title, token)
     // console.log(error)
     return {error: error}

@@ -2,6 +2,7 @@
 import {useState} from 'react'
 import '../main_register/register.css'
 import Link from 'next/link'
+import { EnterLikeGuest } from '../components/components'
 export default function Login(){
     return(
     <LoginForm />)
@@ -32,7 +33,6 @@ function LoginForm(){
             window.location.href = '/confirmation'
         }
     }
-    console.log(error)
     const [type, setType] = useState('password');
     const [image, setImage] = useState('./images/icons/eye_closed.svg')
 
@@ -55,5 +55,7 @@ function LoginForm(){
         <Link href = '/resetPass' className='forgotPass'>Forgot password?</Link>
         <button className='button'><span>OK</span></button>
         </form>
+        {/* <button style={{width:'25%', fontWeight:'400'}} className="button">Enter like guest</button> */}
+        <EnterLikeGuest />
     </div>)
 }

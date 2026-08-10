@@ -2,7 +2,7 @@
 import { useState } from "react";
 import './page.css'
 import Image from 'next/image'
-
+import { useWindowSize } from "react-use";
 
 export function ModalWindow({value, onClose, email} ){
     const [title, setTitle] = useState('')
@@ -30,12 +30,13 @@ export function ModalWindow({value, onClose, email} ){
         }
     }
     if (!value) return null;
+    const {width, height} = useWindowSize()
     return(
         <>
         <div className='overlay_'>
             <div className='modal_'>
                 <div className='task_manager_header_'>
-                    <p className='task_manager_title_'>Create project</p>
+                    <p className='task_manager_title_' style={width<891?{fontSize: '1.3em'}:{}}>Create project</p>
                     <div className={'close_'}>
                         <Image src={'/images/icons/exit_png.png'} width={30} height={30} alt="exit"  onClick={onClose}></Image>
                     </div>
@@ -48,9 +49,8 @@ export function ModalWindow({value, onClose, email} ){
                     <textarea className='input_' onChange={(e)=>{setDirection(e.target.value)}}></textarea>
                     <span style={{fontSize: '0.7em', color: 'red', fontFamily: 'REM'}} className='title_dir'>{error}</span>
                     <div className='agree'>
-                    <button className="agree_button" 
-                    onClick={() => {send_data()
-}}>
+                    <button className="agree_button"
+                    onClick={() => {send_data()}}>
                         Create project
                         </button>
                     </div>

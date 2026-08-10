@@ -10,6 +10,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation';
 import { io } from "socket.io-client";
 import Image from 'next/image'
+import { useWindowSize } from 'react-use';
 
 export default function Users_Projects(){
   const [mounted, setMounted] = useState(false)
@@ -26,8 +27,8 @@ export default function Users_Projects(){
   )
 }
 
-export const fetch_short_getter = async ()=>{
-    let response = await fetch('http://localhost:3001/proPanel/get_email', {
+export async function fetch_short_getter(){
+    let response = await fetch(`${process.env.NEXT_PUBLIC_SERVER_DOMAIN}/proPanel/get_email`, {
       method: 'GET',
       credentials: 'include',
       headers: {
@@ -49,7 +50,7 @@ function ProjectBlocks() {
   const [emailsProjects, setEmailsProjects] = useState([])
   // const [respState, setRespState] = useState()
   const projects_getter = async(email)=>{
-    const resp__ = await fetch('http://localhost:3001/proPanel/projects', 
+    const resp__ = await fetch(`${process.env.NEXT_PUBLIC_SERVER_DOMAIN}/proPanel/projects`, 
       {method:'POST',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({'email': email}),
@@ -63,7 +64,7 @@ function ProjectBlocks() {
     return resp_
   }
   const projects_all = async(email)=>{
-    const response_ = await fetch('http://localhost:3001/sender/getProj', 
+    const response_ = await fetch(`${process.env.NEXT_PUBLIC_SERVER_DOMAIN}/sender/getProj`, 
       {method:'POST',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({'email': email}),
@@ -73,46 +74,49 @@ function ProjectBlocks() {
       setEmailsProjects(prev=>[...prev, ...re.emails])
       return re
   }
-  useEffect(()=>{}, [allProjectsSet])
+
+  // SOCKET IO
+
+//   useEffect(()=>{}, [allProjectsSet])
   const [project, setProject] = useState([]);
   const [tasks, setTasks] = useState([]);
   const [email, setEmail] = useState()
-  let socket = useRef(null)
-useEffect(()=>{ 
-  socket.current = io(process.env.NEXT_PUBLIC_SERVER_DOMAIN, { auth: { email: email } });
-let projectsOwn = [];
-let projectsGuest = [];
-socket.current.on('projectsUpdate', (projects) => {
-  if (projects?.result?.projects) {
-    projectsOwn = [...projects.result.projects];
-    mergeAndSetProjects();
-  }
-  let newEmails = [...projects.email]
-  projects.result.somelProjects.map((i)=>{
-    newEmails.push(i.fromEmail)
-  })
-  setEmailsProjects(newEmails)
-});
+//   let socket = useRef(null)
+//   useEffect(()=>{ 
+//     socket.current = io(process.env.NEXT_PUBLIC_SERVER_DOMAIN, { auth: { email: email } });
+//     let projectsOwn = [];
+//     let projectsGuest = [];
+//     socket.current.on('projectsUpdate', (projects) => {
+//     if (projects?.result?.projects) {
+//       projectsOwn = [...projects.result.projects];
+//       mergeAndSetProjects();
+//     }
+//     let newEmails = [...projects.email]
+//     projects.result.somelProjects.map((i)=>{
+//       newEmails.push(i.fromEmail)
+//   })
+//     setEmailsProjects(newEmails)
+// });
 
-socket.current.on('projectsGet', (projects_guest) => {
-  if (!projects_guest?.directions) return;
+// socket.current.on('projectsGet', (projects_guest) => {
+//   if (!projects_guest?.directions) return;
   
-  let projectsEl = [];
-  projects_guest.directions.forEach((element) => {
-    if (element?.projects?.[0]) {
-      projectsEl.push(element.projects[0]);
-    }
-  });
-  projectsGuest = [...projectsEl];
-  mergeAndSetProjects();
-});
+//   let projectsEl = [];
+//   projects_guest.directions.forEach((element) => {
+//     if (element?.projects?.[0]) {
+//       projectsEl.push(element.projects[0]);
+//     }
+//   });
+//   projectsGuest = [...projectsEl];
+//   mergeAndSetProjects();
+// });
 
-const mergeAndSetProjects = () => {
-  const combined = [...projectsOwn, ...projectsGuest];
-  setProject(combined);
-  setTasks(combined);
-};
-  }, [email])
+// const mergeAndSetProjects = () => {
+//   const combined = [...projectsOwn, ...projectsGuest];
+//   setProject(combined);
+//   setTasks(combined);
+// };
+//   }, [email])
   useEffect(() => {
     const getData = async () => {
       let resp = await fetch_short_getter();
@@ -130,7 +134,6 @@ const mergeAndSetProjects = () => {
       let p1 = JSON.parse(JSON.stringify(projectsEl || ''))
       let combined = [...p, ...p1];
       let deepCopy = JSON.parse(JSON.stringify(combined));
-
       setProject(deepCopy);
       setTasks(JSON.parse(JSON.stringify(deepCopy)));
     };
@@ -166,7 +169,7 @@ const mergeAndSetProjects = () => {
   const fetch_edit = async(email, index, newTitle, oldTitle, newDirection, oldDirection)=>{
     setError('')
     let projectId = allProjectsSet[0].projects[0].id_proj
-    const response = await fetch('http://localhost:3001/proPanel/edit_projects',
+    const response = await fetch(`${process.env.NEXT_PUBLIC_SERVER_DOMAIN}proPanel/edit_projects`,
       {method: 'POST',
         credentials: 'include',
         headers: {'Content-Type': 'application/json'},
@@ -177,6 +180,9 @@ const mergeAndSetProjects = () => {
     if(resp.err.error != ''){
       setErrIdx(index)
       setError(resp.err.error)
+    }
+    if(!error){
+      setProject([...tasks])
     }
     return resp
   }
@@ -190,6 +196,7 @@ const mergeAndSetProjects = () => {
 
   const handlerButton = async (index)=>{
     if(tasks[index].title != project[index].title || tasks[index].direction != project[index].direction){
+      console.log(tasks)
       let resp = await fetch_edit(email, index, tasks[index].title, project[index].title, tasks[index].direction, project[index].direction)
       if (resp.error){
         setError(resp.error)
@@ -221,7 +228,7 @@ const mergeAndSetProjects = () => {
       addId()
     }, [tasks])
   const deleteProject= async (index)=>{
-    const resp = await fetch('http://localhost:3001/proPanel/deleteProject',
+    const resp = await fetch(`${process.env.NEXT_PUBLIC_SERVER_DOMAIN}/proPanel/deleteProject`,
       {method: 'POST',
         credentials: 'include',
         headers: {'Content-Type': 'application/json'},
@@ -234,20 +241,24 @@ const mergeAndSetProjects = () => {
       setError(res.error.error)
     }
   }
+  const{width, height} = useWindowSize()
+  
   return (
     <>
     {project.length > 0 && tasks.length>0 && tasks !=false?
     
-    <div className='main_'>
+    <div className='main_' style={width<891 ? {paddingLeft: '2em'} : {}}>
       <DndContext onDragEnd={handleDragEnd} sensors={sensors}>
-        
         <SortableContext items={tasks.map((_, idx) => idx)}>
           {tasks.map((items, index) => {
             return (
               <SortableItem key={index} id={index}>
-                <div className='block_' onClick={()=>{window.location.href=`/projects/${items.title}`}}>
+                <div className='block_' onClick={()=>{
+                  const l = encodeURIComponent(project[index].title)
+                  window.location.href=`/projects/${l}`}}>
+                {/* {console.log(encodeURIComponent(project[index].title.replace(/%20/g, '%25')))} */}
                 {/*  */}
-                <Image src = '/images/icons/folder_.png' width={30} height={30} alt=''></Image> 
+                <Image src = '/images/icons/folder_.png' width={30} height={30} alt='' className="folderIcon"></Image> 
                   <textarea 
                     onClick={(e)=>{e.stopPropagation()}} 
                     onMouseDown={(e) => e.stopPropagation()} 
@@ -282,7 +293,7 @@ const mergeAndSetProjects = () => {
                   {errIdx === index ? <p style={{color: 'red', fontSize: '0.8em', fontFamily: 'REM'}}>{error}</p> : ''}
                 <div className='handler'>
                   <button 
-                    className='saver' 
+                    className='saver'
                     onClick={(e) => {
                       e.stopPropagation();
                       deleteProject(index)

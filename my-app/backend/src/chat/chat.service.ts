@@ -1,16 +1,16 @@
 import { Injectable } from "@nestjs/common";
 import {checkToken, checkRoots} from '../sender/access'
 import {connection} from '../db'
+import { ChatGateway } from "./chat.gateway";
+import { OnModuleInit } from "@nestjs/common";
 const { ObjectId } = require('mongodb');
 @Injectable()
-class userData{
-
-}
 export class chatService {
-    
     async getMessages(email:string, token:string, type:string, projectId:string, project:string, block?:string){
+        project = decodeURIComponent(project)
         const accessEmail = await checkToken(email, token)
-        const accessRoots = await checkRoots(email, project, projectId, ['read', 'write, admin'])
+        const accessRoots = await checkRoots(email, project, projectId, ['read', 'write', 'admin'])
+        // console.log(accessEmail, accessRoots, 12)
         if(accessEmail!= null && accessRoots!=0){
             const chatCall = await connection.listCollections({name: 'chat'}).toArray()
             if(chatCall.length < 1){
@@ -21,6 +21,8 @@ export class chatService {
             if(type==='block'){
                 const chatsAccess = connection.collection('chat')
                 resp = await chatsAccess.find({idProject: new ObjectId(projectId).toString(), project: project, block: block, type: 'block'}).toArray()
+                // console.log(new ObjectId(projectId).toString(), project, block, type)
+                // console.log(resp, 23)
             }else if(type==='global'){
                 const chatsAccess = connection.collection('chat')
                 resp = await chatsAccess.find({idProject: new ObjectId(projectId).toString(), project: project, type: 'global'}).toArray()
@@ -51,6 +53,7 @@ export class chatService {
         }
     }
     async sendMessages(email:string, token:string, type:string, projectId: Object, project:string, message:string, time:Object, block?:string){
+        project = decodeURIComponent(project)
         const accessEmail = await checkToken(email, token)
         const accessRoots = await checkRoots(email, project, projectId, ['read', 'write, admin'])
         if(accessEmail!= null && accessRoots!=0){
@@ -86,5 +89,25 @@ export class chatService {
                 sendAt: time
             })
         }
+    }
+}
+
+@Injectable()
+export class Chat implements OnModuleInit {
+    constructor(
+        private readonly chatGateway: ChatGateway,
+    ) {}
+
+    async onModuleInit() {
+        const collection = connection.collection('chat');
+        collection.watch([], { fullDocument: 'updateLookup' }).on('change', async (change) => {
+            if (change.operationType != 'insert' &&
+                change.operationType != 'update') {
+            return;
+            }else{
+                console.log(1, 108, '!!!')
+                
+            }
+        })
     }
 }

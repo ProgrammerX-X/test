@@ -17,6 +17,7 @@ import React from 'react'
 import { convertServerPatchToFullTree } from 'next/dist/client/components/segment-cache/navigation';
 import {ModalChat} from './chat/module_chats'
 import {getMessage} from './chat/chats_getSendData'
+import {useWindowSize} from "react-use"
 
 const Select = dynamic(
   () => import('react-select'),
@@ -60,7 +61,7 @@ const SmallModal = ({ callback }) => {
         <div className='small_header'>
           <span style={{fontSize: '1.3em', fontFamily: 'REM', marginLeft: '1em'}}>Share</span>
             <img 
-            src='/images/icons/exit_png.png' 
+            src='/images/icons/exit_png.png'
             onClick={() => { callback(false) }}
             alt="exit"
             width={25} height={25}
@@ -102,18 +103,19 @@ export default function Pro_Panel(){
       if(value){
       setDeadline(value)}
     }
+    const {width, height} = useWindowSize()
     return (
-      <div style={{display: 'flex', alignItems: 'center'}}>
+      <div style={{display: 'flex', alignItems: 'center'} && width<891 ? {overflowY:'scroll'}: {}}>
        
             {smallModal_ && <SmallModal callback={setValue} />}
-            <div className='proPanel_content' suppressHydrationWarning>
+            <div className='proPanel_content' style={width<891 ? {width:'100%', oveflowY:'auto'}:{}} suppressHydrationWarning>
               {!gant && (
               
               <ProPanel path={path_[2]} />)}
-              <div className='column_'>
-                <div className='row_'>
-                  <div style={{marginLeft:'1em', overflowY:'hidden'}}>
-                    <DropLists methods={func} colors={colors} callback={gantOrBlocks} />
+              <div className='column_' style={width<891 ? {width: '100%'} : {}}>
+                <div className='row_' style={width<891 ? {display: 'flex', justifyContent:'flex-end', marginRight: '1em'} : {}}>
+                  <div style={{marginLeft:'1em', overflowY:'hidden', display: 'flex', alignItems: 'flex-start'}}>
+                    <DropLists methods={func} colors={colors} callback={gantOrBlocks} styles_={width < 891 ? {marginLeft: '3em', zIndex:'0'} : {}}/>
                   </div>
                   <img 
                     src='/images/icons/share.png' 
@@ -138,7 +140,7 @@ export default function Pro_Panel(){
     )
 }
 
-function DropLists({methods, colors, callback}){
+function DropLists({methods, colors, callback, styles_}){
     const [selectedOption, setSelectedOption] = useState(methods[0]);
     useEffect(()=>{
       if(selectedOption.label === 'Calendar'){
@@ -207,6 +209,7 @@ function DropLists({methods, colors, callback}){
     container:(base)=>({
       ...base,
       width: 'auto',
+      ...styles_
       // height: '7em'
     })
     }}>
@@ -247,6 +250,7 @@ function TaskMaker({callbackDeadline}){
     }
     getEmail()
   },[])
+  const [BLOCKS_, setBLOCKS_] = useState(null)
   useEffect(() => {
     if (!email) return;
     let blocks = [''];
@@ -257,25 +261,27 @@ function TaskMaker({callbackDeadline}){
     }else{
       setTasks(blocks.resp.blocks)
       setProjectId({id: blocks.resp.id_proj})
+      setBLOCKS_(blocks.resp.blocks)
+      // console.log(blocks.resp.blocks[4].id)
     }
   };
   fetchBlocks();
   }, [email]);
-  
-  const socket = useRef(null)
-  useEffect(()=>{
-    socket.current = io(process.env.NEXT_PUBLIC_SERVER_DOMAIN);
-    socket.current.on('updateBlocks', (blocks) => {
-      if(blocks){
-        setTasks(blocks.payload.blocks)
-      }
-    });
-    return ()=>{
-      socket.current?.disconnect()}
-  }, [])
-  useEffect(()=>{
-    callbackDeadline(tasks_)
-  }, [tasks_])
+  // SOCKET IO
+  // const socket = useRef(null)
+  // useEffect(()=>{
+  //   socket.current = io(process.env.NEXT_PUBLIC_SERVER_DOMAIN);
+  //   socket.current.on('updateBlocks', (blocks) => {
+  //     if(blocks){
+  //       setTasks(blocks.payload.blocks)
+  //     }
+  //   });
+  //   return ()=>{
+  //     socket.current?.disconnect()}
+  // }, [])
+  // useEffect(()=>{
+  //   callbackDeadline(tasks_)
+  // }, [tasks_])
 
   const [active_, setActive] = useState(false)
   const [element, setElement] = useState('')
@@ -329,19 +335,19 @@ function TaskMaker({callbackDeadline}){
         setObject(object_title);
       }
   }, [tasks_id, blockId])
-
-  const socket = useRef(null)
-  useEffect(() => {
-      if (!socket.current) {
-          socket.current = io(process.env.NEXT_PUBLIC_SERVER_DOMAIN);
-      }
-      socket.current.on('updateTasks_', (tasks)=>{
-        setTasks(tasks)
-      });
-      return () => {
-          socket.current.off('updateTasks');
-      };
-  }, []); 
+// SOCKET IO
+  // const socket = useRef(null)
+  // useEffect(() => {
+  //     if (!socket.current) {
+  //         socket.current = io(process.env.NEXT_PUBLIC_SERVER_DOMAIN);
+  //     }
+  //     socket.current.on('updateTasks_', (tasks)=>{
+  //       setTasks(tasks)
+  //     });
+  //     return () => {
+  //         socket.current.off('updateTasks');
+  //     };
+  // }, []); 
 
   const handleCreateClick = () => {
     setTaskObject(undefined);
@@ -438,7 +444,7 @@ function TaskMaker({callbackDeadline}){
                 >Delete Block</button>
             </div>
             {<TaskDirection edit={edit} object_={object} task_id={tasks_id} mood={tasks_[blockId].mood} email={email} teamsForAssign={callBack} project={afterProjects} block={tasks_[blockId].method}
-            blockId = {blockId} projectId = {projectId} chatOnOff = {chatOnOff} chatSet={chatSet} messages={messages}/>}
+             projectId = {projectId} chatOnOff = {chatOnOff} chatSet={chatSet} messages={messages}/>}
             {/* set activator for module chats */}
           </div>{/*tasks*/}
         </div>
@@ -448,12 +454,13 @@ function TaskMaker({callbackDeadline}){
   const pathname = usePathname()
   const afterProjects = pathname.split('/projects/')[1];
   const [teamsForAssign, setTeamsForAssigns] = useState({teams: ''})
+  const {width, height} = useWindowSize()
   return (
   <>
     {tasks_!==null && (
       <DndContext onDragEnd={handleDragEnd} sensors={sensors}>
         <SortableContext items={tasks_.map(t => t.id)}>
-          <div className='task_content'>
+          <div className='task_content' style={width<891 ? {alignItems:'center', flexDirection:'column', overflow:'auto hidden', flex:'1', paddingBottom:'6em'}:{}}>
             <SortableItem key={'l1'} id='l'>
               <div className='block'>
                 <div 
@@ -461,7 +468,7 @@ function TaskMaker({callbackDeadline}){
                   style={{width: '19em'}} 
                   onClick={() => modal_activation(1, 'block')}
                 >
-                  <span className='titleBlock' style={{color: '#1B2036'}}>
+                  <span className='titleBlock' style={{color: '#1B2036', textShadow: '1px 1px 2px rgba(0, 0, 0, 0.5)'}}>
                     <svg width="15" height="15" viewBox="0 0 15 15" style={{marginRight: '0.5em'}}>
                       <circle cx="7.5" cy="7.5" r="7.5" fill={'#1B2036'}/>
                     </svg>
@@ -499,7 +506,7 @@ function TaskMaker({callbackDeadline}){
 )
 }
 
-function TaskDirection({edit, object_, task_id, mood, email, teamsForAssign, project, block, projectId, chatOnOff, chatSet, blockId, messages}){
+function TaskDirection({edit, object_, task_id, mood, email, teamsForAssign, project, block, projectId, chatOnOff, chatSet, messages}){
   const [today, setToday] = useState('');
   const today_base = object_?.deadline[task_id]?.start || ''
   
@@ -631,7 +638,7 @@ function TaskDirection({edit, object_, task_id, mood, email, teamsForAssign, pro
   const [emps, setEmps] = useState([])
   return(
     <div className='tasks_direction'>
-        {chatOnOff ? <ModalChat deactivation={chatSet} type='block' projectId={projectId} project={project} block={blockId} messages={messages}></ModalChat> : null}
+        {chatOnOff ? <ModalChat deactivation={chatSet} type='block' projectId={projectId} project={project} block={block} messages={messages}></ModalChat> : null}
         <p style={{fontWeight: '500', fontSize: '1.4em', margin: '1em', marginBottom: '0.2em', color:'#0e1d49'}}>{edit} task</p>
       <p style={{fontSize:'1em', marginLeft:'1.5em', color:'#575c67'}}>Title</p>
       <input className='inputForm' value={title || ''} onChange={(e)=>{setTitle(e.target.value)}}></input>
@@ -656,10 +663,11 @@ function TaskDirection({edit, object_, task_id, mood, email, teamsForAssign, pro
               }} onMouseEnter={()=>{setEmps(newEmp.value); setShowMore(true)}} onMouseLeave={()=>{setShowMore(false)}}><span>more..</span></div> : ''
               }
               {showMore &&(
-                <div style={{width: '13em', height: 'auto', padding: '1em', backgroundColor:'#F8F8FF', borderRadius:'1em',border:'2px solid silver', zIndex: '90', position: 'absolute', marginLeft: '14em', marginTop: '-1em'}} onMouseEnter={()=>{setShowMore(true)}} onMouseLeave={()=>{setShowMore(false)}}>
+                <div style={{width: '13em', height: 'auto', padding: '0.5em', backgroundColor:mood, borderRadius:'0.3em', border:'1px solid whitesmoke', zIndex: '90', position: 'absolute', marginLeft: '14em', marginTop: '-1em',
+                }} onMouseEnter={()=>{setShowMore(true)}} onMouseLeave={()=>{setShowMore(false)}}>
                   {emps.slice(5).map((i, index)=>{
-                    return(<React.Fragment key={i+index} style={{display: 'flex', alignItems:'center'}}><span style={{color: mood}}>{i.length > 15 ? i.slice(0, 15)+'..' : i}</span>
-                    <Image src='/images/icons/exit_png.png' width={15} height={16} alt='' style={{marginLeft: '0.2em', cursor: 'pointer', marginTop: '0.5em'}} onClick={()=>{
+                    return(<React.Fragment key={i+index} style={{display: 'flex', alignItems:'center'}}><span style={{color: 'whitesmoke'}}>{i.length > 15 ? i.slice(0, 15)+'..' : i}</span>
+                    <Image src='/images/icons/delete_emp.png' width={10} height={10} alt='' style={{cursor: 'pointer', marginLeft: '5%'}} onClick={()=>{
                       deleteEmp(i, index+3)
                     }}></Image><br></br></React.Fragment>)
                   })}
@@ -682,7 +690,6 @@ function TaskDirection({edit, object_, task_id, mood, email, teamsForAssign, pro
           </div>
 
           <div className='block_create'>
-
            {edit === 'Edit' && (
               <button className='delete_block' onClick={()=>deleteTask(email, projectId, project, block, task_id)}>Delete Task</button>
             )}
@@ -713,7 +720,7 @@ function BlockContent({method, mood, direction, email, callBackResp, taskId}){
   }
     return(
         <div className='task_block' onClick={()=>{getAllTeams()}}>
-            <span className='titleBlock' style={{color: mood}}><svg width="15" height="15" viewBox="0 0 15 15" style={{marginRight: '0.5em'}}>
+            <span className='titleBlock' style={{color: mood, textShadow: '1px 1px 2px rgba(0, 0, 0, 0.5)'}}><svg width="15" height="15" viewBox="0 0 15 15" style={{marginRight: '0.5em'}}>
   <circle cx="7.5" cy="7.5" r="7.5" fill={mood}/>
 </svg>{method}</span>
             <p className='direction_content'>1. {direction}...</p>
