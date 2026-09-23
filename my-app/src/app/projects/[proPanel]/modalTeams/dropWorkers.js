@@ -323,7 +323,11 @@ useEffect(()=>{
           fontFamily: 'REM',
           background: `linear-gradient(to top, ${colors[2]}, ${colors[3]})`,
           overflowY:'auto', 
-          height: '110px',
+          height: '150px',
+          padding: '0.3em 0em 0.2em 0em',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'space-between'
           // ...containerStyle_menu
         }),
         menu: (base) => ({ 

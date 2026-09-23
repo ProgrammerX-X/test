@@ -1,20 +1,233 @@
+:root{
+    --heightBlock:7em;
+    --deleteThemeBackground:#faf3f2;
+    --deleteThemeColor:#db1d29;
+    --deleteThemeBorder:2px solid #efd3d2;
+    
+    --deleteHoverBackground:#ffd2d2;
+    --deleteHoverColor:#bd0c0cf6;
+    --deleteHoverBorder:2px solid #ff413a;
+
+    --transitionForButtons: all 0.3s ease;
+
+    --editThemeBackground:#F9F9F9;
+    --editThemeColor:#363347;
+    --editThemeBorder: 2px solid #D5D7E0;
+
+    --editHoverBorder: 2px solid #C0C3D0;
+    --editHoverColor: #2a2738;
+    --editHoverBackground: #eff0f0;
+}
+
 .emailEdit:focus{
     border: none;
     outline: none
+}
+.profileChangeSection{
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%
 }
 .block{
     margin: 2em 0 2em 2em;
     display: flex;
     flex-direction: row;
     align-items: center;
-    height: 7em;
+    height: var(--heightBlock);
     border-radius: 1em;
     border: 2px solid #f2f2f3;
-    width: 90%
+    width: 90%;
+}
+.editButton{
+    border: var(--editThemeBorder);
+    color: var(--editThemeColor);
+    background-color: var(--editThemeBackground);
+    border-radius: 0.8em;
+    font-weight: 700;
+    padding: 0.5em;
+    width: 14em;
+    margin-right: 2em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor:pointer;
+    padding:0.8em;
+    transition: var(--transitionForButtons);
+}
+
+.editorBlock{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-around;
+    width: 100%;
+    height: 100%;
+    
+}
+
+.editorBlockButtons{
+    display: flex; 
+    flex-direction: row; 
+    margin-right: 7em
+}
+
+.editButton:hover{
+    border: var(--editHoverBorder);
+    color: var(--editHoverColor);
+    background-color: var(--editHoverBackground);
+    transition: var(--transitionForButtons);
+}
+
+.deleteButton{
+    border: var(--deleteThemeBorder);
+    background-color: var(--deleteThemeBackground);
+    color: var(--deleteThemeColor);
+    font-weight: 700;
+    border-radius: 0.8em;
+    padding: 0.5em;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor:pointer;
+    padding:0.8em;
+    transition: var(--transitionForButtons);
+}
+.deleteButton:hover{
+    background-color: var(--deleteHoverBackground);
+    color: var(--deleteHoverColor);
+    border: var(--deleteHoverBorder);
+    transition: var(--transitionForButtons);
 }
 
 .data{
     font-family: 'REM';
     display: flex;
     align-items: center;
+}
+
+.overlay{
+    width:100%;
+    position:absolute;
+    height:100%;
+    z-index:2;
+    background-color: #cdcfda8d;
+    backdrop-filter: blur(10px);
+    top:0;
+    left:0;
+    display: flex;
+    align-items:center;
+    justify-content: center;
+}
+.modal{
+    width:50%;
+    height:50%;
+    background-color: #f4f1f1;
+    border-radius: 1em;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.344);
+}
+.modalHeader{
+    padding:1.5em;
+    display: flex;
+    align-items:center;
+    justify-content: space-between;
+}
+.modalBody{
+    display: flex;
+    flex-direction:column;
+    padding:1.8em;
+}
+.modalBodyButtons{
+    display: flex;
+    flex-direction: row;
+    width:100%;
+    justify-content: space-evenly;
+    align-items: center;
+    margin-top:12em;
+}
+
+.deleteAccountButton{
+    background-color: var(--deleteThemeBackground);
+    color:var(--deleteThemeColor);
+    border:var(--deleteThemeBorder);
+    transition: var(--transitionForButtons);
+    padding:1em;
+}
+.deleteAccountButton:hover{
+    background-color: var(--deleteHoverBackground);
+    color:var(--deleteHoverColor);
+    border:var(--deleteHoverBorder);
+    transition: var(--transitionForButtons);
+    cursor:pointer
+}
+.cancelButton{
+    background-color: var(--editThemeBackground);
+    color: var(--editThemeColor);
+    border: var(--editThemeBorder);
+    padding:1em;
+    transition: var(--transitionForButtons);
+
+}
+.cancelButton:hover{
+    background-color: var(--editHoverBackground);
+    color:var(--editHoverColor);
+    border:var(--editHoverBorder);
+    cursor:pointer;
+    transition: var(--transitionForButtons);
+
+}
+
+@media(max-width:520px){
+    .profileChangeSection{
+        width: 90%;
+        box-sizing: border-box;
+    }
+    .editorBlock{
+        width:100%
+    }
+    .editorBlockButtons{
+        margin-right:0.4em;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .editButton{
+        width:9em
+    }
+    .editButton, .deleteButton{
+        padding-left: 0.4em;
+        padding-right:0.4em
+    }
+}
+
+@media(max-width: 660px){
+    .editorBlock{
+        flex-direction: column;
+        align-items:start;
+    }
+    .block{
+        height:calc(var(--heightBlock) + 2em);
+    }
+    .editButton, .deleteButton{
+        margin-bottom: 1em;
+    }
+    .accountIcon{
+        width:0;
+        height:0
+    }
+    .modal{
+        width: 90%
+    }
+}
+
+@media(max-width:1025px ) and (min-width:661px){
+    .editorBlockButtons{
+        margin-right:2em;
+    }
+    .editButton, .deleteButton{
+        padding-left:0em;
+        padding-right:0em;
+        margin-left:0.2em
+    }
 }

@@ -29,6 +29,8 @@ export class SenderMail{
         })
     } 
     async sendEmail( email: string, project: string, fromEmail: string, subject: string, html: string, login_token:string){
+        const email_validation = /^[^\s@]+@[^\s@]+\.[^\s@]+\S$/
+        if (!email_validation.test(email)) return {error: "Register account for this operation."}
         const user = connection.collection('projects')
         const owner = await user.findOne({email: fromEmail, 'projects.title': project}, {projection: {projects: 1}})
         if (email === fromEmail) return {error: 'Please, select another email.'}
@@ -951,23 +953,23 @@ export class jwtAuth{
             return{error: "You don`t have permissions. Go to register or login."}
         }
     }
-    async getTeams(owner: string, project: string){
+    async getTeams(owner: string, projectId: string){
         const cursor = connection.collection('projects')
-        let resp = await cursor.findOne({'email': owner, 'projects.title': project})
+        let resp = await cursor.findOne({'email': owner, 'projects.id_proj': new ObjectId(projectId)})
         let guest = false
         let teams_: object[] = []
         if (resp === null){
             guest=true
-            let final_owner = await cursor.findOne({email: owner, 'somelProjects.project': project}, {projection: {'somelProjects.fromEmail': 1}})
+            let final_owner = await cursor.findOne({email: owner, 'somelProjects.id_proj': new ObjectId(projectId)}, {projection: {'somelProjects.fromEmail': 1}})
             if(final_owner != null){
                 let f = final_owner.somelProjects[0].fromEmail
                 let teams = connection.collection('teams')
                 let r = await teams.findOne({'projects.owner': f, 
-                    'projects.proj.project_name': project}, 
-                    {projection: {'projects.proj.team': 1,'projects.proj.project_name': 1, _id: 0}})
+                    'projects.proj.id_proj': new ObjectId(projectId)}, 
+                    {projection: {'projects.proj.team': 1,'projects.proj.id_proj': 1, _id: 0}})
                 if (r!=null){
                     r.projects.proj.map((team)=>{
-                        if(team.project_name === project){
+                        if(team.id_proj === projectId){
                             team.team.map((i)=>{
                                 // console.log(i.label)
                                 teams_.push({value: i.label, label: i.label})
@@ -979,11 +981,11 @@ export class jwtAuth{
         }else{
             let teams = connection.collection('teams')
             let r = await teams.findOne({'projects.owner': owner, 
-                'projects.proj.project_name': project}, 
-                {projection: {'projects.proj.team': 1,'projects.proj.project_name': 1, _id: 0}})
+                'projects.proj.id_proj': new ObjectId(projectId)}, 
+                {projection: {'projects.proj.team': 1,'projects.proj.id_proj': 1, _id: 0}})
             if (r!=null){
                 r.projects.proj.map((team)=>{
-                    if(team.project_name === project){
+                    if(team.id_proj === projectId){
                         team.team.map((i)=>{
                             // console.log(i.label)
                             teams_.push({value: i.label, label: i.label})
@@ -998,20 +1000,16 @@ export class jwtAuth{
     // const cursor = connection.collection('teams')
         const user = connection.collection('projects')
         // console.log(email, blockName, project, projectId, token)
-        const owner_ = await user.findOne({email: email, 'projects.title': project}, {projection: {projects: 1}})
-        let newProjectId = projectId
-        if (owner_ != null){
-            newProjectId = owner_.projects[0].id_proj
-        }
+        const owner_ = await user.findOne({email: email, 'projects.id_proj': new ObjectId(projectId)}, {projection: {projects: 1}})
         const token_ = await checkToken(email, token)
-        const roots_ = await checkRoots(email, project, newProjectId, ['admin'])
+        const roots_ = await checkRoots(email, project, projectId, ['admin'])
         if(token_ != null && roots_ != 0){
             const cursor = connection.collection('data')
             if(owner_!=null){
                 await cursor.updateOne(
                     {
                     email: email,
-                    'projects.title_proj': project,
+                    'projects.id_proj': new ObjectId(projectId),
                     },
                     {
                     $pull: {
@@ -1024,12 +1022,12 @@ export class jwtAuth{
             }else{
                 await cursor.updateOne({'projects.title_proj': project, 'projects.id_proj': new ObjectId(projectId)}, 
                 {$pull: {
-                        'projects.$.blocks': {
-                        method: blockName
-                        }
-                    } as any})
+                    'projects.$.blocks': {
+                    method: blockName
+                    }
+                } as any})
             }
-        const blocks_ = await this.getBlocks.getBlocksFunction(email, project);
+        // const blocks_ = await this.getBlocks.getBlocksFunction(email, project);
         // this.taskGateway.upBlocks({payload: blocks_}, email, token, projectId)
         return []
     }else{
@@ -1218,14 +1216,14 @@ export class jwtAuth{
         )
         await Promise.all(upPromisses)
         if (Object.values(equals).every(value => value === true)){
-            errors.push('Made some changes.')
+            errors.push('Make some changes.')
         }
         }else{
             errors.push("You don`t have permissions.")
         }
         
         errors.push(error)
-        const tasks = await getBlocksFunction_socket(email, project, projectId)
+        // const tasks = await getBlocksFunction_socket(email, project, projectId)
         // this.taskGateway.updateTasks(tasks, email, projectId, token);
         return errors
     }
@@ -1396,6 +1394,8 @@ export class jwtAuth{
     }
 }
     async editOwner(email:string, newEmail: string, token:string){
+        const email_validation = /^[^\s@]+@[^\s@]+\.[^\s@]+\S$/
+        if(email_validation.test(email)){
         const cursor_projects = connection.collection('projects')
         const cursor_data = connection.collection('data')
         const cursor_teams = connection.collection('teams')
@@ -1404,11 +1404,16 @@ export class jwtAuth{
         const resp = await this.checkUserInLogin(newEmail)
         const valid_ = await this.valid_data(newEmail)
         if(tokenRight!=null && resp != true && valid_.error === ''){
-            await cursor_projects.updateOne({email: email}, {$set: {email: newEmail}})
-            await cursor_projects.updateOne({'somelProjects.fromEmail': email}, {$set: {'somelProjects.$.fromEmail': newEmail}})
-            await cursor_data.updateOne({email: email}, {$set: {email: newEmail}})
-            await cursor_teams.updateOne({'projects.owner': email}, {$set: {'projects.owner': newEmail}})
-            await cursor_login.updateOne({email: email}, {$set: {email: newEmail}})
+            if(email_validation.test(newEmail)){
+                await cursor_projects.updateOne({email: email}, {$set: {email: newEmail}})
+                await cursor_projects.updateOne({'somelProjects.fromEmail': email}, {$set: {'somelProjects.$.fromEmail': newEmail}})
+                await cursor_data.updateOne({email: email}, {$set: {email: newEmail}})
+                await cursor_teams.updateOne({'projects.owner': email}, {$set: {'projects.owner': newEmail}})
+                await cursor_login.updateOne({email: email}, {$set: {email: newEmail}})
+                return{error: '', redirect:null}
+            }else{
+                return {error: 'You can`t change account in guest mode.', redirect: null}
+            }
         }else{
             if(valid_.error !== ''){
                 return {error: valid_.error, redirect: null}
@@ -1417,24 +1422,30 @@ export class jwtAuth{
             }else{
                 return {redirect: '/login', error: null}
             }
+        }}else{
+            return{error: 'You can`t do this in guest mode.', redirect: null}
         }
     }
     async deleteAccount(email:string, token: string){
-        const tokenUnsign = checkToken(email, token)
+        const email_validation = /^[^\s@]+@[^\s@]+\.[^\s@]+\S$/
+        let tokenUnsign:any = ''
         const cursor_projects = connection.collection('projects')
         const cursor_data = connection.collection('data')
         const cursor_teams = connection.collection('teams')
         const cursor_login = connection_login.collection('login')
+        tokenUnsign = checkToken(email, token)
         if(tokenUnsign != null){
-            await cursor_projects.deleteMany({email: email})
-            await cursor_projects.updateOne({'somelProjects.fromEmail': email}, 
-            { $pull: { somelProjects: { fromEmail: email } } as any})
+            await cursor_projects.deleteMany({email:email})
+            await cursor_projects.updateOne({email: email}, 
+            { $pull: { somelProjects: { fromEmail: email }} as any})
             await cursor_data.deleteMany({email: email})
             await cursor_teams.deleteMany({'projects.owner': email})
-            await cursor_login.deleteOne({email: email})
-            return {redirect: '/main_register', error: null}
+            if(!email_validation){
+                await cursor_login.deleteOne({email: email})
+            }
+            return {redirect: `${process.env.DOMAIN}/main_register`, error: null}
         }else{
-            return {redirect: '/login', error: null}
+            return {redirect: `${process.env.DOMAIN}/login`, error: null}
         }
     }
     async checkLogin(email:string, token:string){

@@ -117,10 +117,10 @@ function ProjectBlocks() {
 //   setTasks(combined);
 // };
 //   }, [email])
-  useEffect(() => {
-    const getData = async () => {
+  const getData = async () => {
       let resp = await fetch_short_getter();
       resp = await projects_getter(resp.response);
+      console.log(resp, 123)
       let resp_ = await projects_all(email)
       if(resp_.resp.length<1 && resp.resp.projects.length<1) return 0
       let projectsEl = []
@@ -136,7 +136,9 @@ function ProjectBlocks() {
       let deepCopy = JSON.parse(JSON.stringify(combined));
       setProject(deepCopy);
       setTasks(JSON.parse(JSON.stringify(deepCopy)));
+      console.log(project)
     };
+  useEffect(() => {
     getData();
   }, [email]);
   function handleDragEnd(event){
@@ -169,7 +171,7 @@ function ProjectBlocks() {
   const fetch_edit = async(email, index, newTitle, oldTitle, newDirection, oldDirection)=>{
     setError('')
     let projectId = allProjectsSet[0].projects[0].id_proj
-    const response = await fetch(`${process.env.NEXT_PUBLIC_SERVER_DOMAIN}proPanel/edit_projects`,
+    const response = await fetch(`${process.env.NEXT_PUBLIC_SERVER_DOMAIN}/proPanel/edit_projects`,
       {method: 'POST',
         credentials: 'include',
         headers: {'Content-Type': 'application/json'},
@@ -180,9 +182,6 @@ function ProjectBlocks() {
     if(resp.err.error != ''){
       setErrIdx(index)
       setError(resp.err.error)
-    }
-    if(!error){
-      setProject([...tasks])
     }
     return resp
   }
@@ -195,13 +194,19 @@ function ProjectBlocks() {
   }, [])
 
   const handlerButton = async (index)=>{
+      console.log(tasks[index].title != project[index].title || tasks[index].direction != project[index].direction)
+      console.log(tasks[index].title, project[index].title, tasks[index].direction, project[index].direction)
     if(tasks[index].title != project[index].title || tasks[index].direction != project[index].direction){
-      console.log(tasks)
+      setError('')
       let resp = await fetch_edit(email, index, tasks[index].title, project[index].title, tasks[index].direction, project[index].direction)
-      if (resp.error){
-        setError(resp.error)
-        setErrIdx(index)
-      }
+      // console.log(resp.err, 201, 'error')
+      // if (resp.err || resp['error'].stripe()!=''){
+      //   setError(resp.err)
+      //   setErrIdx(index)
+      // }else{
+      //   console.log('change!')
+      //   // setProject([...tasks])
+      // }
     }else{
       setError('Make some changes.')
       setErrIdx(index)
@@ -255,7 +260,8 @@ function ProjectBlocks() {
               <SortableItem key={index} id={index}>
                 <div className='block_' onClick={()=>{
                   const l = encodeURIComponent(project[index].title)
-                  window.location.href=`/projects/${l}`}}>
+                  const idProj = encodeURIComponent(project[index].id_proj)
+                  window.location.href=`/projects/${l}?id=${idProj}`}}>
                 {/* {console.log(encodeURIComponent(project[index].title.replace(/%20/g, '%25')))} */}
                 {/*  */}
                 <Image src = '/images/icons/folder_.png' width={30} height={30} alt='' className="folderIcon"></Image> 
@@ -268,43 +274,46 @@ function ProjectBlocks() {
                     onChange={(e) => updateTitle(index, e.target.value)}
                   />
                   <hr></hr>
-                  <div style={{display: 'flex', alignItems: 'center', marginTop: '1em'}}>
-                    <Image src = '/images/icons/user_.png' width ={30} height={30} alt=''></Image>
-                    <div style={{display: 'flex', flexDirection: 'column', marginLeft: '1em'}}>
-                      <p style={{fontSize: '0.8em', fontWeight: '100', fontFamily: 'REM', color: '#848ba2'}}>Owner</p>
-                    <p style={{fontSize: '0.9em', fontFamily: 'REM', color: '#0e1221'}}>{emailsProjects[index]}</p>
+                  {/* <div style={{display:'flex', flexDirection:'column', alignItems:'center'}}> */}
+                    <div style={{display: 'flex', alignItems: 'center', marginTop: '1em', width:'100%'}}>
+                      <Image src = '/images/icons/user_.png' width ={30} height={30} alt=''></Image>
+                      <div style={{display: 'flex', flexDirection: 'column', marginLeft: '1em'}}>
+                        <p style={{fontSize: '0.8em', fontWeight: '100', fontFamily: 'REM', color: '#848ba2'}}>Owner</p>
+                      <p style={{fontSize: '0.9em', fontFamily: 'REM', color: '#0e1221'}}>{emailsProjects[index]}</p>
+                      </div>
                     </div>
-                  </div>
-                  <div style={{display: 'flex',  marginTop: '2em', width: '100%'}}>
-                    <Image src = '/images/icons/list.png' width ={15} height={22} alt='' style={{marginTop: '1em'}}></Image>
-                    <div style={{display: 'flex', flexDirection:'column', marginLeft: '2em', width: '100%'}}>
-                      <p style={{fontSize: '0.8em', fontWeight: '100', fontFamily: 'REM', color: '#848ba2'}}>Description</p>
-                      <textarea 
-                        onClick={(e)=>{e.stopPropagation()}} 
-                        onMouseDown={(e) => e.stopPropagation()} 
-                        className='field' 
-                        style={{fontSize: '1em', marginTop: '0em'}}
-                        value={items.direction} 
-                        onChange={(e) => updateDirection(index, e.target.value)}
-                      />
-                    </div>
+                    <div style={{display: 'flex',  marginTop: '2em', width: '100%'}}>
+                      <Image src = '/images/icons/list_0_4.png' width ={30} height={30} alt='' style={{marginTop: '1em'}}></Image>
+                      <div style={{display: 'flex', flexDirection:'column', marginLeft: '1em', width: '100%'}}>
+                        <p style={{fontSize: '0.8em', fontWeight: '100', fontFamily: 'REM', color: '#848ba2'}}>Description</p>
+                        <textarea 
+                          onClick={(e)=>{e.stopPropagation()}} 
+                          onMouseDown={(e) => e.stopPropagation()} 
+                          className='field' 
+                          style={{fontSize: '1em', marginTop: '0em'}}
+                          value={items.direction} 
+                          onChange={(e) => updateDirection(index, e.target.value)}
+                        />
+                      </div>
+                    {/* </div> */}
                   </div>
                   {/* {errIndex.index === index ? (<p style={{color: 'red', fontSize: '0.8em', fontFamily: 'REM'}}>{err.error}</p>) : ''} */}
                   {errIdx === index ? <p style={{color: 'red', fontSize: '0.8em', fontFamily: 'REM'}}>{error}</p> : ''}
                 <div className='handler'>
                   <button 
                     className='saver'
-                    onClick={(e) => {
+                    onClick={async(e) => {
                       e.stopPropagation();
-                      deleteProject(index)
+                      await deleteProject(index);
+                      await getData()
                     }}>
                 Delete
               </button>
                   <button 
                     className='saver' 
-                    onClick={(e) => {
+                    onClick={async(e) => {
                       e.stopPropagation();
-                      handlerButton(index)
+                      await handlerButton(index);
                     }}>
                 Save
               </button>
@@ -314,7 +323,7 @@ function ProjectBlocks() {
             );
           })}
           <SortableItem key={999} id = 'create_project'>
-            <div className='block_' onClick={()=>createProject()}><p className='field'>Create project</p></div>
+            <div className='block_' onClick={()=>{createProject()}}><p className='field'>Create project</p></div>
           </SortableItem>
         </SortableContext>
       </DndContext>
@@ -331,7 +340,7 @@ function ProjectBlocks() {
     </div>
     </>
     }
-    {showModal && <ModalWindow value={showModal} onClose={closeWindow} email={email}/>}
+    {showModal && <ModalWindow value={showModal} onClose={closeWindow} email={email} allProjectsCaller={getData}/>}
   </>
   );
 }

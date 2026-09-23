@@ -5,6 +5,7 @@ import Image from 'next/image';
 import {GetRoles} from './dropWorkers'
 import {fetch_short_getter} from '../../page'
 import { io } from "socket.io-client";
+import { useWindowSize } from "react-use";
 
 export function ModalCreateTeam({setVisibleCreateTeams, teams}){
     const [teamName, setTeamName] = useState('')
@@ -99,6 +100,7 @@ export function ModalCreateTeam({setVisibleCreateTeams, teams}){
             setVisibleCreateTeams(false);
         }
     }, [error_]);
+    const {width, height} = useWindowSize()
     return(
             <div className='overlay'>
               <div className='modal_team'>
@@ -202,7 +204,8 @@ export function AddMember({status, teamName, owner, project, type, guest, callBa
     //     });
     //     return () => socket.current?.disconnect();
     // }, [])
-    return(
+    const {width, height} = useWindowSize()
+    return( 
         <div style={{width: '100%', height: '100%', display: 'flex', zIndex: 1000}} onClick={()=>{setVisible_(false)}}>
             <div className='modal_addMember' onClick={(e) => e.stopPropagation()}>
                 <GetRoles width = '100%' value ={'Select emails'} type='checkbox' callback={callback_} methods={em}></GetRoles>

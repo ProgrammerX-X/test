@@ -18,7 +18,6 @@ export async function POST(request:NextRequest){
             if (err.err!=undefined && err.err == ''){
                 err_check_db = await check_db(req['email'], req['password'])
             }
-            // console.log(err_check_db)
             if (err_check_db!==undefined && err_check_db.err === 'no_err' && err_check_db.params === 'ok'){
                 await cookie_setter('error', '' as string, '/confirmation', 0)
                 await cookie_setter('email', '' as string, '/api/confirmation', 0)

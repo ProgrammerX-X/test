@@ -37,7 +37,6 @@ export function Gantt({deadline}) {
       ]
     });
   }, [deadlineDone_]);
-  
   return (<div style={{ display: 'flex', flexDirection: 'column', width: '100em', height: '32em', overflow: 'auto', marginTop: '-6em'}}>
   <div ref={containerRef} style={{ width: '100%', height: '100%' }}></div>
 </div>)

@@ -1,5 +1,6 @@
 'use client'
-import './page.css'
+import './stylesFor[ProPanel]/page.css'
+import './stylesFor[ProPanel]/mobileStyles.css'
 import {ProPanel} from '../../list/components'
 import {useState, useEffect, useRef, useCallback} from 'react'
 import dynamic from 'next/dynamic';
@@ -18,6 +19,7 @@ import { convertServerPatchToFullTree } from 'next/dist/client/components/segmen
 import {ModalChat} from './chat/module_chats'
 import {getMessage} from './chat/chats_getSendData'
 import {useWindowSize} from "react-use"
+import { useSearchParams } from 'next/navigation'
 
 const Select = dynamic(
   () => import('react-select'),
@@ -26,6 +28,10 @@ const Select = dynamic(
 
 const SmallModal = ({ callback }) => {
   const [emailValue, setEmailValue] = useState('')
+ 
+  // Route -> /shop/[tag]/[item]
+  // URL -> /shop/shoes/nike-air-max-97
+  // `params` -> { tag: 'shoes', item: 'nike-air-max-97' }
   const path = usePathname()
   let path_ = path.split('/')
   let email;
@@ -53,27 +59,35 @@ const SmallModal = ({ callback }) => {
         setError('')
       }
     }
+    const emailInput = useRef(null)
   return (
-    <div className='overlay_small' onClick={()=>{share(false)}}>
+    //  onClick={()=>{share(false)}}
+    <div className='overlay_small'>
       {/*  */}
-      <div className='modal_small_' onClick={(e) => e.stopPropagation()}>
+      <div className='modalShare' onClick={(e) => e.stopPropagation()}>
         {/*  */}
-        <div className='small_header'>
-          <span style={{fontSize: '1.3em', fontFamily: 'REM', marginLeft: '1em'}}>Share</span>
+        <div className='headerShare'>
+          <span style={{fontSize: '1.7em', fontFamily: 'REM', fontWeight:'700'}}>Share</span>
             <img 
             src='/images/icons/exit_png.png'
             onClick={() => { callback(false) }}
             alt="exit"
-            width={25} height={25}
-            style={{marginRight: '2em'}}
-          />
+            width={30} height={30}/>
         </div>
-        <div className={'container_small'}>
-          <span style={{marginTop: '1em', fontSize: '1.1em', fontFamily: 'REM'}}>Email</span>
-          <span style={{fontSize: '0.8em', fontFamily: 'REM', color: 'red', marginTop: '1em'}}>{error}</span>
-          <input style={{ marginTop: '1em', height:'3em'
-          }} className='inputForm' type='text' onChange={(e)=>setEmailValue(e.target.value)} value={emailValue}></input>
-          <button style={{width: '10em', marginTop: '2em', padding: '0.5em', fontSize: '0.9em', borderRadius: '1em', border: '1px solid silver'}}
+        <div className = 'shareContainer'>
+          <div className="shareBody">
+            <span className="descriptionShare">Enter email address you want to share with</span>
+            <div className="shareInput" onClick={()=>{emailInput.current.focus()}}>
+              <Image src="/images/icons/shareEmail_border_3.png" width={19} height={15} alt='emailShare' style={{zIndex:'1', cursor:'text'}} onClick={()=>{emailInput.current.focus()}}></Image>
+              {/* style={{ marginTop: '1em', height:'3em', marginLeft:0}}  */}
+              <input className='inputForm' type='text' ref={emailInput}
+              onChange={(e)=>setEmailValue(e.target.value)} value={emailValue} placeholder="example@gmail.com">
+                
+              </input>
+            </div>
+            <div className='error'>{error ? <><Image src="/images/icons/alert_2.png" width={20} height={20} alt='alert'></Image><span style={{marginLeft:'1em'}}>{error}</span></> : <></>}</div>
+          </div>
+          <button className="shareButton"
           onClick={()=>{fetch_share()}}
           >Send</button>
         </div>
@@ -112,13 +126,13 @@ export default function Pro_Panel(){
               {!gant && (
               
               <ProPanel path={path_[2]} />)}
-              <div className='column_' style={width<891 ? {width: '100%'} : {}}>
+              <div className='column_' style={width<891 || deadline.length===0 && gant ? {width: '100%'} : {}}>
                 <div className='row_' style={width<891 ? {display: 'flex', justifyContent:'flex-end', marginRight: '1em'} : {}}>
                   <div style={{marginLeft:'1em', overflowY:'hidden', display: 'flex', alignItems: 'flex-start'}}>
                     <DropLists methods={func} colors={colors} callback={gantOrBlocks} styles_={width < 891 ? {marginLeft: '3em', zIndex:'0'} : {}}/>
                   </div>
                   <img 
-                    src='/images/icons/share.png' 
+                    src='/images/icons/share.png'
                     style={{marginLeft: '2em', marginTop: '0.7em', cursor: 'pointer', width: '1em', height: '1.5em'}}
                     onClick={() => share(true)}
                   />
@@ -129,9 +143,11 @@ export default function Pro_Panel(){
                 </>)}
                 {
                   gant && (
-                    <>
-                    <Gantt deadline={deadline}></Gantt>
-                    </>
+                    <div className="gantNoDataBlock">
+                    {deadline.length>0 ? 
+                    <Gantt deadline={deadline}></Gantt>:<span style={{fontSize: '5em'}}>No data</span>
+                    }
+                    </div>
                   )
                 }
               </div>
@@ -217,13 +233,14 @@ function DropLists({methods, colors, callback, styles_}){
     )
 }
 async function get_blocks(method, obj){
-    const response = await fetch(`${process.env.NEXT_PUBLIC_SERVER_DOMAIN}/proPanel`, {
-      method: method,
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify(obj),
-    });
-    let resp = await response.json();
-    return resp
+  const response = await fetch(`${process.env.NEXT_PUBLIC_SERVER_DOMAIN}/proPanel`, {
+    method: method,
+    headers: {'Content-Type': 'application/json'},
+    credentials:'include',
+    body: JSON.stringify(obj),
+  });
+  let resp = await response.json();
+  return resp
 }
 let object_title = {
   'title': [],
@@ -251,22 +268,43 @@ function TaskMaker({callbackDeadline}){
     getEmail()
   },[])
   const [BLOCKS_, setBLOCKS_] = useState(null)
-  useEffect(() => {
-    if (!email) return;
-    let blocks = [''];
-    const fetchBlocks = async () => {
-    blocks = await get_blocks('POST', {"email": email, "project": rout[1]});
-    if(blocks.resp === 'redirect'){
-      window.location.href = '/projects';
-    }else{
-      setTasks(blocks.resp.blocks)
-      setProjectId({id: blocks.resp.id_proj})
-      setBLOCKS_(blocks.resp.blocks)
-      // console.log(blocks.resp.blocks[4].id)
+  let searchParams = ''
+  searchParams = useSearchParams().get('id')
+  const fetchBlocks = async () => {
+    try{
+      if (!email) return;
+      let blocks = [''];
+     
+      blocks = await get_blocks('POST', {"email": email, "project": rout[1], projectId: searchParams});
+      if(blocks.resp === 'redirect'){
+        window.location.href = '/projects';
+      }else{
+        setTasks(blocks.resp.blocks)
+        setProjectId({id: blocks.resp.id_proj})
+        setBLOCKS_(blocks.resp.blocks)
+        // console.log(blocks.resp.blocks[4].id)
+      }
+      console.log(blocks.resp.blocks, 275, 'pooling')
+    }catch(e){
+      console.log(e)
     }
   };
-  fetchBlocks();
+  useEffect(() => {
+    fetchBlocks();
   }, [email]);
+  // POOLING!
+
+  // const fetchBlocksEvent = async()=>{
+
+  // }
+
+  // const setInterval_ = setInterval(async()=>{
+  //   await fetchBlocks()
+  // }, 5000)
+
+  // to stop interval
+  // clearInterval(setInterval_)
+
   // SOCKET IO
   // const socket = useRef(null)
   // useEffect(()=>{
@@ -335,6 +373,7 @@ function TaskMaker({callbackDeadline}){
         setObject(object_title);
       }
   }, [tasks_id, blockId])
+
 // SOCKET IO
   // const socket = useRef(null)
   // useEffect(() => {
@@ -374,6 +413,7 @@ function TaskMaker({callbackDeadline}){
       body: JSON.stringify({blockName: blockName, email: email, project: rout[1], projectId: projectId})
     });
     let resp = await response.json();
+    console.log(resp)
     setError(resp.errors)
     return resp
   }
@@ -388,14 +428,7 @@ function TaskMaker({callbackDeadline}){
         setError(res.errors);
       }
     }
-    const [chatOnOff, chatSet] = useState(false)
-    const [messages, setMessages] = useState(undefined)
-    async function chatActivator(activator){
-      if(activator){
-        chatSet(activator)
-        setMessages(await getMessage('block', projectId, afterProjects, blockId))
-      }
-    }
+    
     // const chatActivator = useCallback(async(activator)=>{
     //   if(activator){
     //     chatSet(activator)
@@ -404,6 +437,10 @@ function TaskMaker({callbackDeadline}){
     //     console.log('0')
     //   }
     // })
+    const [taskDirectionOn, setTaskDirectionOn] = useState(false)
+    // useEffect(()=>{
+    //   if (width>770){ setTaskDirectionOn(true)}
+    // }, [taskDirectionOn, width])
     return(
     <div className='overlay'>    
       <div className='modal'>
@@ -418,8 +455,7 @@ function TaskMaker({callbackDeadline}){
           <div className='tasks'>
           <div className = 'styler_container'>
               <div className='block_title' style={{color: tasks_[blockId].mood}}><p>{tasks_[blockId].method}</p>
-              <Image src ={'/images/icons/chat_0_2.png'} alt={''} height={25} width={30}
-              onClick={()=>chatActivator(true)}></Image>
+              {/*  */}
               </div>
               <hr></hr>
                 <div className='block_with_tasks'>
@@ -428,8 +464,12 @@ function TaskMaker({callbackDeadline}){
                     return null
                   }
                   return(
-                  <div className='tasks_' key = {tasks_[blockId].tasks.title[index]+tasks_[blockId].tasks.direction[index]+index} onClick={()=>{setTaskObject(index)}}>
-                    <svg width="15" height="15" viewBox="0 0 15 15" style={{margin: '0.8em', marginBottom: '-0.1em'}}>
+                  <div className='tasks_' key = {tasks_[blockId].tasks.title[index]+tasks_[blockId].tasks.direction[index]+index} onClick={
+                  ()=>{
+                  setTaskObject(index);
+                  setTaskDirectionOn(true);
+                  }}>
+                    <svg width="15" height="15" viewBox="0 0 15 15" style={{margin: '0.8em 0.4em 0.8em 0em', marginBottom: '-0.1em'}}>
                       <circle cx="7.5" cy="7.5" r="7.5" fill={tasks_[blockId].mood}/>
                     </svg>
                     <span>{task}</span>
@@ -437,14 +477,20 @@ function TaskMaker({callbackDeadline}){
                   })}
                 
                 </div>
-                <button className='make_create_block' onClick={handleCreateClick}>Create task</button>
+                <div className='blockButtons'>
+                <button className='make_create_block' 
+                onClick={()=>{
+                  handleCreateClick();
+                  setTaskDirectionOn(true)
+                  }}>Create task</button>
                 {error && <p style={{fontSize:'0.8em', color: 'red', padding:'0.8em'}}>{error}</p>}
-                <button className='make_create_block' onClick={()=>{handleDelete()}}
-                style={{backgroundColor: '#fdf3f3', color: 'rgb(180, 0, 0)', border: '1px solid #930000'}}
+                <button className='delete_block_button' onClick={()=>{handleDelete()}}
+                // style={{backgroundColor: '#fdf3f3', color: 'rgb(180, 0, 0)', border: '1px solid #930000'}}
                 >Delete Block</button>
+                </div>
             </div>
             {<TaskDirection edit={edit} object_={object} task_id={tasks_id} mood={tasks_[blockId].mood} email={email} teamsForAssign={callBack} project={afterProjects} block={tasks_[blockId].method}
-             projectId = {projectId} chatOnOff = {chatOnOff} chatSet={chatSet} messages={messages}/>}
+             projectId = {projectId} blockId={blockId} TaskDirectionOn={taskDirectionOn} setTaskDirectionOn={setTaskDirectionOn}/>}
             {/* set activator for module chats */}
           </div>{/*tasks*/}
         </div>
@@ -464,10 +510,9 @@ function TaskMaker({callbackDeadline}){
             <SortableItem key={'l1'} id='l'>
               <div className='block'>
                 <div 
-                  className='task_block' 
+                  className='task_block'
                   style={{width: '19em'}} 
-                  onClick={() => modal_activation(1, 'block')}
-                >
+                  onClick={() => modal_activation(1, 'block')}>
                   <span className='titleBlock' style={{color: '#1B2036', textShadow: '1px 1px 2px rgba(0, 0, 0, 0.5)'}}>
                     <svg width="15" height="15" viewBox="0 0 15 15" style={{marginRight: '0.5em'}}>
                       <circle cx="7.5" cy="7.5" r="7.5" fill={'#1B2036'}/>
@@ -488,6 +533,7 @@ function TaskMaker({callbackDeadline}){
                     email={email} 
                     callBackResp={setTeamsForAssigns} 
                     taskId={tasks_id}
+                    projectId={projectId}
                   />
                 </div>
               </SortableItem>
@@ -500,13 +546,27 @@ function TaskMaker({callbackDeadline}){
     {parameter === true ? (
       active_ && element && <Modal callBack={teamsForAssign} setActive={setActive} />
     ) : (
-      active_ && element && <Modal_Block onClose={() => setActive(false)} email={email} project={afterProjects} projectId={projectId} />
+      active_ && element && <Modal_Block onClose={() => setActive(false)} email={email} project={afterProjects} projectId={projectId} getBlocks={fetchBlocks}/>
     )}
   </>
 )
 }
 
-function TaskDirection({edit, object_, task_id, mood, email, teamsForAssign, project, block, projectId, chatOnOff, chatSet, messages}){
+function TaskDirection({edit, object_, task_id, mood, email, teamsForAssign, project, block, projectId, blockId, TaskDirectionOn, setTaskDirectionOn}){
+  
+  const {width, height} = useWindowSize()
+  console.log(width)
+  // const styles = {display: 'flex', position:'absolute', zIndex:'1', width:width}
+  useEffect(() => {
+    console.log(TaskDirectionOn)
+  }, [TaskDirectionOn])
+
+  // useEffect(() => {
+  //   if (width > 770) {
+  //     setTaskDirectionOn(true)
+  //   }
+  // }, [width, TaskDirectionOn, setTaskDirectionOn])
+
   const [today, setToday] = useState('');
   const today_base = object_?.deadline[task_id]?.start || ''
   
@@ -594,7 +654,40 @@ function TaskDirection({edit, object_, task_id, mood, email, teamsForAssign, pro
         }
     setNewEmp(emp)
   }
+  const [clearEmployeers, setClearEmployeers] = useState([])
+  function calibrationTeamsMembers(members, calibrationArray){
+    // console.log(calibrationArray, calibrationArray.length)
+    if(calibrationArray.length>0){
+      let resultArrayEmployers = calibrationArray.map((i)=>{
+        if(!members.includes(i.value)){
+          return i.value
+        }
+      })
+      // console.log(resultArrayEmployers)
+      return resultArrayEmployers.filter(item => item !== undefined)
+    }else{
+      return []
+    }
+  }
+  function calibrationTeamsMembersTransform(teamsArray_){
+    if(teamsArray_.length>0){
+      let resultTeamsArray = teamsArray_.map((i)=>{
+        return {value: i, label:i}
+      })
+      return resultTeamsArray
+    }else{
+      return []
+    }
+  }
+  useEffect(()=>{
+    let teamsMembers = calibrationTeamsMembers(newEmp.value, teamsForAssign.teams)
+    let teamsMemberDictionary = calibrationTeamsMembersTransform(teamsMembers)
+    setClearEmployeers(teamsMemberDictionary)
+  }, [newEmp, teamsForAssign])
 
+  // useEffect(()=>{
+  //   console.log(clearEmployeers)
+  // }, [clearEmployeers])
   const taskDone = async(email, project, projectId, block, task_id, checkboxStatus) =>{
     const resp = await fetch(`${process.env.NEXT_PUBLIC_SERVER_DOMAIN}/sender/taskDone`,{
       method: 'POST',
@@ -634,61 +727,141 @@ function TaskDirection({edit, object_, task_id, mood, email, teamsForAssign, pro
     const resp_ = await resp.json()
     setError_(resp_.status)
   }
+
+  // useEffect(()=>{
+  //   console.log(newEmp, 702)
+  // }, [newEmp])
+
   const [showMore, setShowMore] = useState(false);
   const [emps, setEmps] = useState([])
+  const [chatOnOff, chatSet] = useState(false)
+  const [messages, setMessages] = useState(undefined)
+  const pathname= usePathname()
+  const afterProjects = pathname.split('/projects/')[1];
+  async function chatActivator(activator){
+    if(activator){
+      chatSet(activator)
+      setMessages(await getMessage('block', projectId, afterProjects, blockId))
+    }
+  }
+  console.log(TaskDirectionOn || width>770)
+  // if(!TaskDirectionOn){
+  //   return null
+  // }
+  // const
+  useEffect(()=>{
+    console.log(process.env.NEXT_PUBLIC_MAXCOUNTOFTEAMS)
+  }, [process.env.NEXT_PUBLIC_MAXCOUNTOFTEAMS])
   return(
-    <div className='tasks_direction'>
+    <>
+    {(width>770 || TaskDirectionOn) && (<div className='tasks_direction' style={width<770 && !TaskDirectionOn ? {display:'none'} : {display:'flex'}}>
         {chatOnOff ? <ModalChat deactivation={chatSet} type='block' projectId={projectId} project={project} block={block} messages={messages}></ModalChat> : null}
-        <p style={{fontWeight: '500', fontSize: '1.4em', margin: '1em', marginBottom: '0.2em', color:'#0e1d49'}}>{edit} task</p>
-      <p style={{fontSize:'1em', marginLeft:'1.5em', color:'#575c67'}}>Title</p>
-      <input className='inputForm' value={title || ''} onChange={(e)=>{setTitle(e.target.value)}}></input>
-      
-      <div className='direction_field'>
-        <span style={{color: 'red', fontSize:'0.8em', fontFamily:"REM"}}>{error_}</span>
-        <div className='direction_'>
-          <div style={{display: 'flex', flexDirection:'column'}}>
-              <p style={{color:'#575c67'}}>Description</p>
-            <textarea type='text' className='direction' value={description} onChange={(e)=>{setDescription(e.target.value)}}></textarea>
+        <div className="blockChat">
+          <p style={{fontWeight: '500', fontSize: '1.4em', color:'#0e1d49'}}>{edit} task</p>
+          <div>
+            <Image src ={'/images/icons/chat_0_3.png'} alt={''} height={25} width={30}
+                onClick={()=>chatActivator(true)} style={{marginRight:'1em'}}></Image>
+            {width<770 ? 
+            <Image src = {'/images/icons/exit_png.png'} alt='exitOutOfTheTask' width={30} height={30} onClick={()=>{setTaskDirectionOn(false)}}></Image> : <></>  
+          }
           </div>
+        </div>
+        <div className = "title">
+          <p style={{fontSize:'1em', marginLeft:'1.5em', color:'#575c67'}}>Title</p>
+          <input className='direction' style={{marginLeft:'1.5em', width:'90%'}}value={title || ''} onChange={(e)=>{setTitle(e.target.value)}}></input>
+        </div>
+        <div className='direction_field'>
+          <span style={{color: 'red', fontSize:'0.8em', fontFamily:"REM"}}>{error_}</span>
+          <div className='direction_'>
+            <div style={{display: 'flex', flexDirection:'column', width:'100%'}}>
+                <p style={{color:'#575c67'}}>Description</p>
+                <textarea type='text' className='direction' value={description} onChange={(e)=>{setDescription(e.target.value)}}></textarea>
+            </div>
             <div className='assigness_block'>
               <p>Teams</p>
               <div className='assigness'>
-              {newEmp!=undefined && newEmp.value.length>0 ? newEmp.label.slice(0, 5).map((items, index) => {
+              {newEmp!=undefined && newEmp.value.length>0 && process.env.NEXT_PUBLIC_MAXCOUNTOFTEAMS!=undefined ? newEmp.label.slice(0, process.env.NEXT_PUBLIC_MAXCOUNTOFTEAMS).map((items, index) => {
                   return <div className='member' style={{backgroundColor: mood}} key={projectId.id+index+'d'}><span>
                     {items.length>10 ? items.slice(0, 9)+"..." : items}
                   <Image src='/images/icons/delete_emp.png' width={10} height={10} alt='' style={{marginLeft: '0.3em', cursor: 'pointer'}} onClick={()=>{deleteEmp(items, index)}}></Image></span></div>
-              }) : <span style={{color: 'black', width: '100%', whiteSpace: 'word-wrap', position: 'initial'}}>No one here, you can add team.</span>}
-              {newEmp.value.length > 5 ? <div style={{display: 'flex', alignItems: 'center', color: '#76789c', width: '7em', height:'1.5em', backgroundColor: '#e9e9f2', borderRadius: '0.5em',
+              }) : <span className='spanTeamsMembers'>No one here, you can add team.</span>}
+              {process.env.NEXT_PUBLIC_MAXCOUNTOFTEAMS!=undefined && newEmp.value.length > process.env.NEXT_PUBLIC_MAXCOUNTOFTEAMS ? <div style={{display: 'flex', alignItems: 'center', color: '#76789c', width: '7em', height:'1.5em', backgroundColor: '#e9e9f2', borderRadius: '0.5em',
                 justifyContent: 'center', cursor:  'pointer'
-              }} onMouseEnter={()=>{setEmps(newEmp.value); setShowMore(true)}} onMouseLeave={()=>{setShowMore(false)}}><span>more..</span></div> : ''
+              }} onMouseEnter={()=>{
+                if(width>770){
+                  setEmps(newEmp.value); 
+                  setShowMore(true)
+                }
+              }}
+                onMouseLeave={()=>{
+                  if(width>770){
+                    setShowMore(false)
+                  }
+                }}
+              onClick={()=>{if (width<770){ setEmps(newEmp.value); setShowMore(true)} else{ setShowMore(false)}}}
+              ><span>more..</span></div> : ''
               }
               {showMore &&(
-                <div style={{width: '13em', height: 'auto', padding: '0.5em', backgroundColor:mood, borderRadius:'0.3em', border:'1px solid whitesmoke', zIndex: '90', position: 'absolute', marginLeft: '14em', marginTop: '-1em',
-                }} onMouseEnter={()=>{setShowMore(true)}} onMouseLeave={()=>{setShowMore(false)}}>
-                  {emps.slice(5).map((i, index)=>{
-                    return(<React.Fragment key={i+index} style={{display: 'flex', alignItems:'center'}}><span style={{color: 'whitesmoke'}}>{i.length > 15 ? i.slice(0, 15)+'..' : i}</span>
-                    <Image src='/images/icons/delete_emp.png' width={10} height={10} alt='' style={{cursor: 'pointer', marginLeft: '5%'}} onClick={()=>{
-                      deleteEmp(i, index+3)
-                    }}></Image><br></br></React.Fragment>)
+                <div className='moreTeams' onMouseEnter={()=>{
+                  if(width>770){
+                    setShowMore(true)
+                  }
+                  }} onMouseLeave={()=>{
+                    if(width>770){
+                     setShowMore(false)
+                    }
+                  }}>
+                  <div className="moreTeamsHeaders">
+                    <div style={{display:'flex', alignItems:'center'}}>
+                      <svg width="40" height="40" viewBox="0 0 30 30" style={{marginRight: '0.5em', display:'flex', justifyContent:'center', alignItems:'center'}}>
+                        <circle cx="15" cy="15" r="15" fill = {mood ? mood : "#EBEBF0"}/>
+                        <image href='/images/icons/moreUsers.png' alt='moreUsersImage' x="5" y="5" width="20" height="20"></image>
+                      </svg>
+                      <span style={{color:'black'}}>More teams</span>
+                    </div>
+                    {width < 770 ? <Image src='/images/icons/exit_png.png' width={30} height={30} alt='exit' onClick={()=>{setShowMore(false)}}></Image> : <></>}
+                    
+                  </div>
+                  {console.log(newEmp)}
+                   
+                  {newEmp.value.slice(process.env.NEXT_PUBLIC_MAXCOUNTOFTEAMS, newEmp.length).map((i, index)=>{
+                    return(<React.Fragment key={i+index} style={{display: 'flex', alignItems:'center'}}>
+                      <div className='moreMembersMember'>
+                    <div style={{display:'flex', alignItems:'center'}}>
+                        <svg width="30" height="30" viewBox="0 0 30 30" style={{marginRight: '0.5em'}} fill = {mood ? mood : "#EBEBF0"}>
+                          <circle cx="15" cy="15" r="15">
+                          </circle>
+                          <image href='/images/icons/moreUsers.png' alt='moreUsersImage' x="7.5" y="7.5" width="15" height="15"></image>
+                        </svg>
+                        <span style={{color: 'black'}}>{width > 770 ? (i.length > 15 ? i.slice(0, 15)+'..' : i) : (i.length > 45 ? i.slice(0, 45)+'..' : i)}</span>
+                      </div>
+                    <Image src='/images/icons/delete_worker.png' width={25} height={25} alt='' style={{cursor: 'pointer', marginLeft: '5%'}} onClick={()=>{
+                      deleteEmp(i, index+5)
+                    }}></Image></div>
+                    <br></br></React.Fragment>)
                   })}
+                 
                 </div>
               )}
               </div>
-              <GetRoles callback={callbackData} width = {'90%'} value={'Select team'} methods={teamsForAssign.teams} type='checkbox'></GetRoles>
+              <GetRoles callback={callbackData} width = {'90%'} value={'Select team'} methods={clearEmployeers} type='checkbox'></GetRoles>
             </div>
         </div>
         {edit === 'Edit'&&(<div style={{display: 'flex', flexDirection: 'row', marginTop: '1em'}}>
-          <input type='checkbox' onChange={(e)=>{setChecked(e.target.checked)}} checked={checked} onClick={(e)=>{taskDone(email, project, projectId, block, task_id, e.target.checked)}}></input><span style={{marginLeft:'1em'}}>Task complete</span>
+          <input type='checkbox' onChange={(e)=>{setChecked(e.target.checked)}} checked={checked ?? false} onClick={(e)=>{taskDone(email, project, projectId, block, task_id, e.target.checked)}}></input><span style={{marginLeft:'1em'}}>Task complete</span>
         </div>)}
         
           <div className='date_block'>
-            <span className='date_text'>Deadline</span>
-            <input className='date' type='date' name='date' value={today}
-            onChange={(e) => setToday(e.target.value)}></input>
-            <span className='date_text'>To</span>
-            <input className='date' type='date' name='date_end' value={tomorrow} onChange={(e) => setTomorrow(e.target.value)}></input>
+            <div className="deadline">
+              <span className='date_text'>From:</span>
+              <input className='date' type='date' name='date' value={today}
+              onChange={(e) => setToday(e.target.value)}></input>
+            </div>
+            <div className="deadline">
+              <span className='date_text'>To:</span>
+              <input className='date' type='date' name='date_end' value={tomorrow} onChange={(e) => setTomorrow(e.target.value)}></input>
+            </div>
           </div>
-
           <div className='block_create'>
            {edit === 'Edit' && (
               <button className='delete_block' onClick={()=>deleteTask(email, projectId, project, block, task_id)}>Delete Task</button>
@@ -699,21 +872,22 @@ function TaskDirection({edit, object_, task_id, mood, email, teamsForAssign, pro
               }else{
                 updateTask(email, project, title, description, newEmp, {start: today, end: tomorrow}, block, task_id)
               }
-            }}>{edit} task</button>
+            }}><span>{edit} task</span></button>
           </div>
       </div>
-    </div>
+    </div>)
+          }</>
   )
 }
 
-function BlockContent({method, mood, direction, email, callBackResp, taskId}){
+function BlockContent({method, mood, direction, email, callBackResp, taskId, projectId}){
   const path = usePathname()
   let path_ = path.split('/')
     const getAllTeams = async()=>{
       const response = await fetch(`${process.env.NEXT_PUBLIC_SERVER_DOMAIN}/sender/getTeams`, {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({email: email, project: path_[2], blockName: method, taskId: taskId})
+      body: JSON.stringify({email: email, project: projectId, blockName: method, taskId: taskId})
     })
     const resp = await response.json()
     callBackResp(resp)

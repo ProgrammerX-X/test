@@ -281,20 +281,19 @@ export class SenderController {
       return{status: ['error', '/main_register']}
     }
   }
-  @Get('/deleteOwner')
+  @Delete('/deleteOwner')
   async deleteOwner(@Req() req:Request, @Res({ passthrough: true }) res: Response){
     const email = req.cookies.email
     const token = req.cookies.login
     const cookies = req.cookies || {};
-    
-    Object.keys(cookies).forEach(cookieName => {
-      res.clearCookie(cookieName, { path: '/' });
-    });
     if((email!=undefined && email != null) && (token!=null || token != undefined)){
       const emailUnsign = signature.unsign(email, SECRET_!!)
       const tokenUnsign = signature.unsign(token, SECRET_!!)
       if(emailUnsign && tokenUnsign){
         const resp = await this.service_.deleteAccount(emailUnsign, tokenUnsign)
+        Object.keys(cookies).forEach(cookieName => {
+          res.clearCookie(cookieName, { path: '/' });
+        });
         return {status: resp}
       }else{
         return {status: ['error', '/main_register']}

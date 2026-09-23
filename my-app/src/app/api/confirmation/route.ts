@@ -18,7 +18,7 @@ export async function POST(request: NextRequest){
         if(await response['status'] === ''){
             const cookieStore = await cookies()
             const emailCookie = (cookieStore.get('email')?.value) ?? ''
-            const emailCookieUnsigned = signature.unsign(emailCookie, SECRET_ || 'rezervSECRET')
+            const emailCookieUnsigned = signature.unsign(emailCookie, SECRET_)
             if (emailCookieUnsigned){
                 let confResp = await confirm_email(emailCookieUnsigned)
                 resp_.parameter = confResp as string

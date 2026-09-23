@@ -1,3 +1,4 @@
+import './components.css'
 export function EnterLikeGuest(){
   const enterGuestMode = async()=>{
     const resp = await fetch(`${process.env.NEXT_PUBLIC_SERVER_DOMAIN}/guest/guestAccess`, {
@@ -11,6 +12,6 @@ export function EnterLikeGuest(){
     }
   }
   return(
-    <button style={{width:'25%', fontWeight:'400'}} className="button" onClick={()=>{enterGuestMode()}}>Enter like guest</button>
+    <button className="button buttonGuest" onClick={()=>{enterGuestMode()}}><span style={{padding:'1em'}}>Enter like guest</span></button>
   )
 }

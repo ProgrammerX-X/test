@@ -1,3 +1,6 @@
+:root{
+    --widthForColumn_:80%
+}
 body{
     background: linear-gradient(to top right, #cdd3e3, #ffffff 30%);
     overflow-y:hidden
@@ -20,13 +23,20 @@ body{
     display: flex;
     flex-direction: column;
     font-family: 'REM';
-    width: 80%;
+    width: var(--widthForColumn_)
 }
+
+.gantNoDataBlock{
+    display: flex; justify-content:center;
+    align-items:center; 
+    flex-direction:column;
+}
+
 
 .task_content{
     display: flex;
     flex-direction: row;
-    justify-content: space-between;
+    /* justify-content: space-between; */
     margin-top: -9em;
     width: 100%;
     height: 100%;
@@ -107,6 +117,10 @@ body{
   justify-content: center;
 }
 .modal{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: start;
     width: 75%;
     height: 90%;
     border-radius: 2em;
@@ -122,7 +136,7 @@ body{
     top: 0;
     width: 3em;
     height: 3em;
-    margin-right: 5em;
+    margin-right: 3em;
     display: flex;
     align-items: center;
     
@@ -149,13 +163,11 @@ body{
     flex-direction: row;
     width: 100%;
     height: 100%;
-    
 }
 .tasks{
     display: flex;
     width: 100%;
-    height: 75%;
-    margin-left: 2em;
+    height: 90%;
     margin-top: 2em;
     background: linear-gradient(to top right, #c2c8e2, #e4e7f3 20%);
     border-radius: 2em;
@@ -169,20 +181,22 @@ hr{
 }
 
 .block_title{
-    margin-top: 1.5em;
-    margin-left: 1em;
-    margin-bottom: 1em;
+    padding:1em 0em 1em 0em;
+    /* margin-top: 1.5em; */
+    /* margin-left: 1em; */
+    /* margin-bottom: 1em; */
     font-size: 1.2em;
     color: #0e1d49;
     font-weight: 700;
     display: flex;
-    justify-content: space-between
+    justify-content: center;
+    align-items: center;
 }
 
 .tasks_{
     width: 80%;
     /* min-height: 3em; */
-    padding: 0.4em;
+    padding: 0.4em 0.4em 0.4em 0.7em;
     padding-bottom: 0.9em;
     height: auto;
     background-color: white;
@@ -199,30 +213,48 @@ hr{
     /* align-items: center; */
 }
 .tasks_direction{
-    /* margin: 1em; */
-    margin-top: 1em;
-    margin-right: 1em;
-    width: 220%;
+    display:flex;
+    flex-direction: column;
+    margin: 1em;
+    width: 100%;
     height: 90%;
     background-color: #faf9fd;
     border-radius: 1em;
     box-shadow: 0px 1em 2em #97a5c8;
-    margin-left: 1em;
     min-width: 80%;
-    position: relative
+    position: relative;
 }
 
 .inputForm{
-    width: 90%;
-    height: 10%;
-    border-radius: 0.7em;
-    border: 2px solid #c6c8d2;
-    background-color: #eef0f7;
-    margin-top: 0.7em;
-    margin-left: 1.5em;
-    padding: 4px 8px 0 8px;
-    font-size: 1em;
-    font-family: 'REM';
+    border: none;
+    outline: none;
+    
+    background: transparent;
+    -webkit-box-shadow: none;
+    box-shadow: none;
+    
+    padding: 0;
+    margin: 0;
+    
+    font-family: inherit;
+    font-size: inherit;
+    
+    appearance: none;
+    -webkit-appearance: none;
+    height:100%;
+    width:100%;
+    padding-left:0.5em;
+}
+.inputForm:focus{
+    outline:none !important;
+    border:none !important;
+    box-shadow: none !important;
+    border-color:transparent !important;
+    /* padding-left:0.5em */
+}
+.inputForm::placeholder{
+    color:rgba(0, 0, 0, 0.774);
+    font-weight:100
 }
 
 .direction_field{
@@ -230,8 +262,10 @@ hr{
     margin-top: 0.5em;
     display: flex;
     flex-direction: column;
+    justify-content: space-evenly;
+    height:100%
     /* overflow-y: hidden; */
-    height: 40em
+    /* height: 40em */
 }
 .droplist_sel{
     z-index: 5
@@ -254,7 +288,7 @@ hr{
     /* top: -7.5em; */
 }
 .direction{
-    width: 20em;
+    /* width: 20em; */
     height: 7em;
     padding: 4px 8px 0 8px;
     resize: none;
@@ -263,6 +297,7 @@ hr{
     border-radius: 0.7em;
     font-size: 1em;
     font-family: 'REM';
+    width:100%
 }
 .direction:focus, .inputForm:focus{
     outline: 1px solid #c9cbd8;
@@ -274,6 +309,7 @@ hr{
     display: flex;
     flex-direction: row;
     position: block;
+    justify-content: space-between;
     /* z-index: 10000 */
 }
 
@@ -281,7 +317,7 @@ hr{
     position: relative;
     color:rgb(87, 92, 103);
     margin-left: 1em;
-    width: 70%;
+    width: 100%;
 }
 .assigness{
     display: flex;
@@ -311,7 +347,8 @@ hr{
     border: 1px solid #4a4a4a;
     border-radius: 0.5em;
     font-weight: 700;
-    cursor: pointer
+    cursor: pointer;
+    /* padding: 1em */
 }
 
 .delete_block{
@@ -333,20 +370,21 @@ hr{
 
 .create_edit_task:hover{
     background: #ededed;
+    cursor: pointer
 }
 .create_edit_task:active{
     background: #dfdfdf;
 }
 
 .block_create{
-    margin-top: 2em;
+    /* margin-top: 2em; */
     width: 100%;
-    height: 3em;
+    height: auto;
     display: flex;
     justify-content: space-around;
     position: relative;
-    right: 2em;
-    cursor: pointer
+    margin-bottom:10%
+    /* right: 2em; */
 }
 
 .date_block{
@@ -355,7 +393,8 @@ hr{
     align-items: center;
     width: 100%;
     height: 4em;
-    z-index: 1
+    z-index: 1;
+    justify-content: space-evenly;
 }
 .block_with_tasks{
     display: flex;
@@ -378,6 +417,29 @@ hr{
     margin-left: 18%;
     cursor: pointer
 }
+    /* background: #fdf3f3;
+    color: rgb(180, 0, 0);
+    border: 1px solid #930000; */
+.delete_block_button{
+    /* color: white; */
+    font-weight: 700;
+    background: #fdf3f3;
+    color: rgb(180, 0, 0);
+    border: 1px solid #930000;
+    border-radius: 0.5em;
+    margin-top: 1em;
+    padding: 0.8em;
+    width: 70%;
+    margin-left: 18%;
+    cursor: pointer
+}
+.delete_block_button:hover{
+    background: #efdede;
+}
+.delete_block_button:active{
+    background: #e0bfbf;
+} 
+
 .make_create_block:hover{
     background: #ededed;
 }
@@ -386,39 +448,159 @@ hr{
 }
 
 .overlay_small{
-    z-index: 999;
+    z-index: 1;
     height: 100%;
     width: 100%;
     position: fixed;
     display: flex;
     justify-content: center;
+    align-items: center;
+    top:0;
+    left:0
 }
 
-.modal_small_{
-    margin-top: 7em;
+.modalShare{
+    display: flex;
+    flex-direction:column;
     position: fixed;
-    background: linear-gradient(to bottom, #bac0d2, #d8dbe8 90%);
-    height: 30%;
-    width: 30%;
-    z-index: 1000;
-    border-radius: 2em; 
-    border: 2px solid #a7adbd
+    background-color: #fdfefe;
+    height: 45%;
+    width: 25%;
+    z-index: 2;
+    border-radius: 1em;
+    margin-bottom:10em;
+    justify-content: space-evenly;
+    box-shadow:0px 1px 5px rgba(0, 0, 0, 0.30)
 }
 
-.small_header{
+.headerShare{
     display: flex;
     justify-content: space-between;
-    padding-top: 1em;
+    padding-left: 1.7em;
+    padding-right: 1.7em;
     border-radius: 1em 1em 0em 0em;
 }
-.container_small{
+.shareContainer{
     display: flex;
     flex-direction: column;
-    align-items: center
+    align-items: center;
+    justify-content: center;
+    height:60%
+}
+.error{
+    display: flex;
+    align-items:end;
+    font-size: 0.8em;
+    font-family: 'REM';
+    color: red;
+    margin-top: 1em;
+    /* margin-left:0.5em */
+}
+.shareBody{
+    display:flex;
+    flex-direction:column;
+    width:90%;
+    height:70%;
+    align-items: start;
+}
+.shareBody > .error{
+    justify-content: start;
 }
 
 .moreEmps:hover{
     color: red
+}
+
+.block{
+    margin-left: 2em;
+}
+.shareButton{
+    width: 55%; 
+    height:20%;
+    font-size: 1em;
+    color: white;
+    font-weight: 200;
+    border-radius: 0.2em;
+    border: 1px solid #3a5cf0;
+    background-color: #4767f3;
+    cursor:pointer;
+    border-radius: 0.5em;
+}
+
+.descriptionShare{
+    font-size:0.9em;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    color:#828282;
+
+}
+
+.shareInput{
+    width: 100%;
+    height: 30%;
+    border-radius: 0.7em;
+    border: 1px solid #d9dbe3;
+    background-color: white;
+    margin-top: 0.7em;
+    padding: 4px 8px 0 8px;
+    font-size: 1em;
+    font-family: 'REM';
+    display:flex;
+    align-items:center;
+    position:relative;
+    justify-content:center;
+    cursor:text;
+}
+.blockChat{
+    display:flex;
+    padding:1.5em;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.title{
+    display:flex;
+    flex-direction: column;
+    height: 4em;
+}
+
+.spanTeamsMembers{
+    color: black;
+    width: 90%;
+    white-space: word-wrap;
+    position: initial;
+    padding-bottom: 10%
+}
+
+.moreTeams{
+    width: 95%;
+    height: 150px;
+    overflow-y:scroll;
+    padding: 0.5em;
+    border-radius:0.3em;
+    /* border: 1px solid whitesmoke; */
+    z-index: 2;
+    position: absolute;
+    margin-left: 0em;
+    margin-top: -1em;
+    background-color: whitesmoke;
+    box-shadow: 0px 1px 10px #0000007e
+}
+
+.moreTeamsHeaders{
+    display:flex;
+    width:100%;
+    padding:0.3em;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom:0.8em
+}
+.moreMembersMember{
+    display:flex;
+    align-items:center;
+    box-shadow: 0px 2px 5px #0000007e;
+    padding:0.7em;
+    border-radius: 0.7em;
+    justify-content: space-between;
 }
 
 @media (max-width: 891px){
@@ -429,3 +611,11 @@ hr{
 .row_{
     display: flex;
 }
+
+@media(max-width:1100px){
+    .modalShare{
+        width:40%
+    }
+}
+
+@import './mobileStyles.css';

@@ -3,7 +3,7 @@ import { useState } from "react"
 import './modal.css'
 import {useWindowSize} from "react-use"
 
-export function Modal_Block({ onClose, email, project, projectId }){
+export function Modal_Block({ onClose, email, project, projectId, getBlocks}){
   const [color, setColor] = useState('')
   const [title, setTitle] = useState('')
   const [error, setError] = useState('')
@@ -43,7 +43,7 @@ export function Modal_Block({ onClose, email, project, projectId }){
                 <input type='color' style={{marginLeft: '1em'}} onChange={(e)=>(setColor(e.target.value))}></input>
               </div>
                   <div className='block_create__'>
-                    <button className='create_edit_task' style={width<891 ? {height:'4em', width: '20%'} : {}} onClick={()=>createBlock(color, title)}>Create block</button>
+                    <button className='create_edit_task' style={width<891 ? {height:'4em', width: '20%'} : {}} onClick={async()=>{await createBlock(color, title), await getBlocks()}}>Create block</button>
                   </div>    
           </div>
         </div>

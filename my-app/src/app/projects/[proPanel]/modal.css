@@ -13,10 +13,8 @@
     height: 20%;
     display: flex;
     align-items: center;
-    /* margin: em; */
     margin-left: 2em;
     margin-top: 1em;
-    /* background: none; */
 }
 
 .container__{
@@ -81,5 +79,10 @@ input[type="color"]::-webkit-color-swatch {
     .modal__{
         width: 80%;
         height: 45%;
+    }
+}
+@media(max-width: 550px){
+    .modal{
+        width:100%
     }
 }

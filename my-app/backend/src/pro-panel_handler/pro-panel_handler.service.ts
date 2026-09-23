@@ -14,6 +14,8 @@ import { MongoClient, UpdateFilter  } from 'mongodb'
 import { checkRoots, checkToken } from 'src/sender/access';
 import { OnModuleInit } from '@nestjs/common';
 import {getAllProjectsSocket} from './socketHandler'
+import { convertSegmentPathToStaticExportFilename } from 'next/dist/shared/lib/segment-cache/segment-value-encoding';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 
 const { ObjectId } = require('mongodb');
 @Injectable()
@@ -21,59 +23,110 @@ export class ProPanelHandlerService {
   constructor(
     @InjectModel(GetBlock.name) private dataBase: Model<GetBlock>,
     @InjectModel(GetProjects.name) private dataBase_: Model<GetProjects>,
-    private taskGateway: TaskGateway
+    // private taskGateway: TaskGateway
+    private eventEmitter: EventEmitter2
   ) {}
 
-  async getBlocksFunction(email: string, project: string) {
-    // project = decodeURIComponent(project)
-    // console.log(project, 29)
-  const result = await this.dataBase.aggregate([
-    { $match: { "email": email } },
-    { $unwind: "$projects" },
-    { $match: { "projects.title_proj": project } }
-  ]);
-  let res = String(result)
-  if(res==''){
-    const client = new MongoClient(process.env.DB_LOGIN_FOR_USERS_PROJECTS || '')
-    const connection = client.db('users_projects')
-    const cursor = connection.collection('projects')
-    let resp = await cursor.findOne({email: email, 'somelProjects.project': project}, {projection: {'somelProjects.fromEmail': 1}})
-    if (resp!=null){
-      const owner = resp.somelProjects[0].fromEmail
-      let blocks_ = await this.dataBase.aggregate([
-    { $match: { "email": owner } },
-    { $unwind: "$projects" },
-    { $match: { "projects.title_proj": project } }
-  ]);
-    await client.close()
-      return blocks_[0].projects
+  async getBlocksFunction(email: string, token:string, project: string, checkedOrNot: boolean, projectId:string | null | {_id: string}) {
+    // NEW SCRIPT
+    let checkToken_ = 0
+    let checkRoots_ = 0
+    if(checkedOrNot===true){
+      checkToken_ = 1
+      checkRoots_ = 1
+    }else{
+      checkToken_ = await checkToken(email, token)
+      checkRoots_ = await checkRoots(email, project, projectId, ['admin', 'write', 'read'])
     }
-    else{
-      // let newProject = decodeURIComponent(project)
-      if(project!=null && project!=undefined && project!=''){
-        const projectOwner = await this.dataBase_.findOne({'email': email, 'projects.title': project})
-        if(projectOwner==null){
-          const projectOwner = await this.dataBase_.findOne({'email': email, 'somelProjects.project': project})
-          if(projectOwner === null){
-            return "redirect"
-          }else{
-            await client.close()
-            return await this.getBlocksFunction(email, project)
-          }
-        }        
-        else{
-          await client.close()
-          return await this.getBlocksFunction(email, project)
-        }
-      }else{
+    if(checkToken_!=0 && checkRoots_!=0){
+      let newProject = decodeURIComponent(project)
+      const ownerOrNot = await this.dataBase.aggregate([
+      { $match: { "email": email } },
+      { $unwind: "$projects" },
+      { $match: { "projects.title_proj": newProject } }
+    ]);
+    if(ownerOrNot.length===0){
+      const client = new MongoClient(process.env.DB_LOGIN_FOR_USERS_PROJECTS || '')
+      const connection = client.db('users_projects')
+      const cursor = connection.collection('projects')
+      let resp = await cursor.findOne({email: email, 'somelProjects.project': newProject}, {projection: {'somelProjects.fromEmail': 1}})
+      if (resp!=null){
+        const owner = resp.somelProjects[0].fromEmail
+        let blocks_ = await this.dataBase.aggregate([
+          { $match: { "email": owner } },
+          { $unwind: "$projects" },
+          { $match: { "projects.title_proj": newProject } }
+        ]);
         await client.close()
-        return "redirect"
+        this.eventEmitter.emit("updateBlocks", ({
+          email: email,
+          project: project,
+          projectId: projectId,
+          blocksData: blocks_[0].projects}))
+        return blocks_[0].projects
+      }else{
+        this.eventEmitter.emit("updateBlocks", {blocks:[]})
+        return {blocks: []}
       }
+    }else{
+      this.eventEmitter.emit("updateBlocks", ownerOrNot[0].projects)
+      return ownerOrNot[0].projects
     }
   }else{
-    const blocks = result;
-    return blocks[0].projects;
+    return {blocks:[]}
   }
+
+  // OLD SCRIPT
+
+    // project = decodeURIComponent(project)
+    // console.log(project, 29)
+  // const result = await this.dataBase.aggregate([
+  //   { $match: { "email": email } },
+  //   { $unwind: "$projects" },
+  //   { $match: { "projects.title_proj": project } }
+  // ]);
+  // let res = String(result)
+  // if(res==''){
+  //   const client = new MongoClient(process.env.DB_LOGIN_FOR_USERS_PROJECTS || '')
+  //   const connection = client.db('users_projects')
+  //   const cursor = connection.collection('projects')
+  //   let resp = await cursor.findOne({email: email, 'somelProjects.project': project}, {projection: {'somelProjects.fromEmail': 1}})
+  //   if (resp!=null){
+  //     const owner = resp.somelProjects[0].fromEmail
+  //     let blocks_ = await this.dataBase.aggregate([
+  //   { $match: { "email": owner } },
+  //   { $unwind: "$projects" },
+  //   { $match: { "projects.title_proj": project } }
+  // ]);
+  //   await client.close()
+  //     return blocks_[0].projects
+  //   }
+  //   else{
+  //     // let newProject = decodeURIComponent(project)
+  //     if(project!=null && project!=undefined && project!=''){
+  //       const projectOwner = await this.dataBase_.findOne({'email': email, 'projects.title': project})
+  //       if(projectOwner==null){
+  //         const projectOwner = await this.dataBase_.findOne({'email': email, 'somelProjects.project': project})
+  //         if(projectOwner === null){
+  //           return "redirect"
+  //         }else{
+  //           await client.close()
+  //           return await this.getBlocksFunction(email, project)
+  //         }
+  //       }        
+  //       else{
+  //         await client.close()
+  //         return await this.getBlocksFunction(email, project)
+  //       }
+  //     }else{
+  //       await client.close()
+  //       return "redirect"
+  //     }
+  //   }
+  // }else{
+  //   const blocks = result;
+  //   return blocks[0].projects;
+  // }
   }
   
   async getAllProjects(email:string){
@@ -90,24 +143,25 @@ export class ProPanelHandlerService {
   async editProject(email: string, index: number, newTitle:string, oldTitle: string, newDirection: string, oldDirection:string, token:string, projectId:string){
     const user = connection.collection('projects')
     const user_data = connection.collection('data')
-    const owner = await user.findOne({email: email, 'projects.title': oldTitle}, {projection: {projects: 1}})
+    const owner = await user.findOne({email: email, 'projects.id_proj': new ObjectId(projectId)}, {projection: {projects: 1}})
+    console.log(newTitle, oldTitle, newDirection, oldDirection)
+    console.log(newTitle === oldTitle && newDirection === oldDirection)
     if(newTitle === oldTitle && newDirection === oldDirection) return {error: "Make some changes."}
     const alreadyChaged = await user.findOne({email:email, 'projects.title':newTitle}, {projection: {projects:1}})
-    if(alreadyChaged!=null) return {error: "Already changed!"}
-    let newProjectId = projectId
-    if (owner != null){
-      newProjectId = owner.projects[0].id_proj
-    }
+    const alreadyChangedDirection = await user.findOne({email:email, 'projects.direction':newDirection}, {projection: {projects:1}})
+
+    if(alreadyChaged!=null && alreadyChangedDirection != null) return {error: "Already changed!"}
     const token_ = await checkToken(email, token)
-    const roots_ = await checkRoots(email, oldTitle, newProjectId)
-    if(token_ != null && roots_ != 0){
-      await user.updateOne({'somelProjects.id_proj': newProjectId, 'somelProjects.project': oldTitle}, {$set:{'somelProjects.$.project': newTitle}})
-      await user.updateOne({'projects.id_proj': newProjectId, 'projects.title': oldTitle}, {$set:{ 'projects.$.title':newTitle}})
-      await user.updateOne({'projects.id_proj': newProjectId, 'projects.title': newTitle}, {$set:{ [`projects.$.direction`]:newDirection}})
+    const roots_ = await checkRoots(email, oldTitle, projectId)
+    if(token_ != 0 && roots_ != 0 && owner!=null){
+      const r = await user.updateOne({'somelProjects.id_proj': new ObjectId(projectId)}, {$set:{'somelProjects.$.project': newTitle}})
+      console.log(r, 112)
+      await user.updateOne({'projects.id_proj': new ObjectId(projectId)}, {$set:{ 'projects.$.title':newTitle}})
+      await user.updateOne({'projects.id_proj': new ObjectId(projectId)}, {$set:{ [`projects.$.direction`]:newDirection}})
       await user_data.updateOne(
         { 
           email: email, 
-          projects: { $elemMatch: { title_proj: oldTitle } } 
+          projects: { $elemMatch: { id_proj: new ObjectId(projectId) } } 
         },
         { 
           $set: { 
@@ -119,7 +173,7 @@ export class ProPanelHandlerService {
       data.updateOne(
         { 
           email: email, 
-          projects: { $elemMatch: { title_proj: oldTitle } } 
+          projects: { $elemMatch: { id_proj: new ObjectId(projectId) } } 
         },
         { 
           $set: { 
@@ -130,8 +184,7 @@ export class ProPanelHandlerService {
       const teams = connection.collection('teams')
       await teams.updateOne(
       { 
-        'projects.proj.id_proj': newProjectId,
-        'projects.proj.project_name': oldTitle
+        'projects.proj.id_proj': new ObjectId(projectId),
       },
       { 
         $set: { 
@@ -139,7 +192,7 @@ export class ProPanelHandlerService {
         } 
       })
       const chats = connection.collection('chat')
-      let resp = await chats.updateMany({'ownerEmail':email, 'project': oldTitle, idProject: newProjectId.toString()}, {$set:{project: newTitle}})
+      let resp = await chats.updateMany({'ownerEmail':email, idProject: projectId.toString()}, {$set:{project: newTitle}})
       // const projects_ = await this.getAllProjects(email)
       // this.taskGateway.server.to(email).emit('getProjects', projects_)
       return {error: ''}
@@ -152,7 +205,7 @@ export class ProPanelHandlerService {
     // console.log(token)
     const token_ = await checkToken(email, token)
     // console.log(token_)
-    if(token_!=null){
+    if(token_!=0){
       const user = connection.collection('projects')
       const user_data = connection.collection('data')
       let resp = await user.findOne(
@@ -223,7 +276,7 @@ export class ProPanelHandlerService {
     // project = decodeURIComponent(project)
     const roots_ = await checkRoots(email, project, projectId, ['admin'])
     const id_ = new ObjectId(projectId)
-    if(token_!=null && roots_ != 0){
+    if(token_!=0 && roots_ != 0){
       const user_data = connection.collection('data')
       let rep = await user_data.findOne({
           'projects': {
@@ -266,7 +319,7 @@ export class ProPanelHandlerService {
             } 
           } as any
         })
-        const blocks_ = await this.getBlocksFunction(email, project);
+        // const blocks_ = await this.getBlocksFunction(email, token, project, true, projectId);
         // SOCKET IO
         // this.taskGateway.upBlocks({payload: blocks_}, email, token, projectId);
         return {error: ''}
@@ -283,7 +336,7 @@ export class ProPanelHandlerService {
       const projectId = await cursor.findOne({email: email, 'projects.title': title}, {projection: {id_proj: 1}})
       const token_ = await checkToken(email, token)
       const roots_ = await checkRoots(email, title, projectId)
-      if(token_!=null && roots_ != 0){
+      if(token_!=0 && roots_ != 0){
         await cursor.updateOne(
           { email: email },
           { 

@@ -110,7 +110,7 @@ return (
     ) : (
       <>
         <div className='no-messages'>{console.log(messages)}No messages</div>
-        <div className='form' style={{marginTop:'55%'}}>
+        <div className='form'>
           <Form mess={mess} setMess={setMess} sendInChat={sendInChat}/>
       </div>
       </>

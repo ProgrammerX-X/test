@@ -224,6 +224,9 @@
         height: 3.5em;
         padding: 0.5em
     }
+    .main_{
+        justify-content: start;
+    }
 }
 @media(max-width:420px){
     .modal_{

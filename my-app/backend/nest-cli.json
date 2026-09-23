@@ -4,5 +4,14 @@
   "sourceRoot": "src",
   "compilerOptions": {
     "deleteOutDir": true
-  }
+  },
+  "watch": {
+      "ignore": [
+        "dist/**/*",
+        "node_modules/**/*",
+        "*.log",
+        ".git/**/*",
+        "*.txt"
+      ]
+    }
 }

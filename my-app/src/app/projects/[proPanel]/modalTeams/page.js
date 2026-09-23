@@ -11,6 +11,7 @@ import { usePathname } from 'next/navigation';
 import {ModalCreateTeam, AddMember} from './modal_createTeams'
 import {io} from 'socket.io-client'
 import { hashCode } from './hashCode';
+import { useWindowSize } from 'react-use';
 export default function TeamsPage() {
   return (
     <>
@@ -121,10 +122,10 @@ useEffect(() => {
   }
   const [teamIdx, setTeamIdx] = useState()
   return (
-    teams !== undefined && teams !== null && (
+    teams !== undefined && teams !== null  && teams.length>0 ? (
       <div className='teams'>
         <div className='header_team'>
-          <span style={{fontSize: '5em'}}>Teams</span>
+          <span className="teamsHeader">Teams</span>
         </div>
         <div className='team_list'>
           <ul style={{display: 'flex', flexDirection: 'column', cursor: 'pointer', width: 'auto', height: 'auto'}}>
@@ -184,7 +185,7 @@ useEffect(() => {
         {visibleModalCreate && <ModalCreateTeam setVisibleCreateTeams={setVisibleModalCreateTeams} teams={teams}
         ></ModalCreateTeam>}
       </div>
-    )
+    ):<div style={{width:'100%', height:'100%', display: 'flex', alignItems:'center', justifyContent:'center'}}><span style={{fontFamily:'REM', fontSize:'1.5em'}}>No teams</span></div>
   )
 }
 
@@ -262,13 +263,14 @@ function Modal({setter, teams, project_index, projectName, teamIndex, teamN, typ
     res = await res.json()
     setError(res.error)
   }
+  const {width, height} = useWindowSize()
   return(
     <>
     <div className='overlay' onClick={()=>setStatus(false)}>
       <div className='modal_team'>
         <div className='header_'>
-          <span style={{paddingLeft: '1em', fontSize: '2em'}}>Team settings</span>
-          <Image src = '/images/icons/exit_png.png' onClick={()=>{setter(false)}} width={30} height={30}
+          <span style={width>561?{paddingLeft: '1em', fontSize: '2em'} : {paddingLeft: '1em', fontSize: '1.6em'}}>Team settings</span>
+          <Image src = '/images/icons/exit_png.png' onClick={()=>{setter(false)}} width={width<1025 ? 40 : 30} height={width<1025 ? 40 : 30}
           style={{marginRight: '1.5em', cursor: 'pointer'}} alt='exit'></Image>
         </div>
         <div className='container'>
@@ -287,8 +289,8 @@ function Modal({setter, teams, project_index, projectName, teamIndex, teamN, typ
           <div style={{display: 'flex', marginTop: '1em', flexDirection: 'column'}}>
             <div style={{display: 'flex', justifyContent: 'space-between', marginBottom: '1em', alignItems: 'center'}}>
               <span style={{fontSize: '1.1em'}}>Team Members</span>
-              <div style={{display: 'flex', flexDirection: 'column', alignItems: 'center'}} onClick={(e)=>{e.stopPropagation()}}>
-                <button style={{padding: '0.4em', borderRadius: '0.3em', backgroundColor: '#3b3b3b', color: '#fcfbfc', width: '8.5em', border: 'none', cursor: 'pointer'}}
+              <div style={{display: 'flex', flexDirection: 'column', justifyContent: 'end'} && width<410 ? {marginRight:"100%"} : {} && width<1025 ? {marginRight: '7em'} : {}} onClick={(e)=>{e.stopPropagation()}}>
+                <button style={width<410 ? {marginLeft:"80%"} : {} && width<1025 ? {marginLeft: "100%"}:{}} className='selectMembersButton'
                 onClick={()=>setStatus(true)}
                 >+ Add Member</button>
                 {status_ && teams && <AddMember status={setStatus} teamName={teamIndex} owner = {teams[project_index]?.owner || ''} project = {teams[project_index].project_name} type={type} guest = {teams[project_index].guest} callBackErr={errorCallBack}> </AddMember>}
@@ -342,11 +344,9 @@ function Modal({setter, teams, project_index, projectName, teamIndex, teamN, typ
             <div style={{display: 'flex', flexDirection: 'column', marginTop: '1em'}}>
               <hr></hr>
               <span style={{marginTop: '1em'}}>Team Actions</span>
-              <button style={{marginTop: '1em', width: '21%', height: '2.5em', display: 'flex', 
-                justifyContent: 'space-evenly', alignItems: 'center', backgroundColor: '#faf3f2', border: '1px solid #efd3d2',
-                padding: '1em', color: '#db1d29', borderRadius: '0.5em'}} onClick={()=>{deleteTeam(); setter(false)}}>
+              <button className='deleteTeamButton' onClick={()=>{deleteTeam(); setter(false)}}>
                 <Image src='/images/icons/trash_butt_.png' width={15} height={16} alt='trash'></Image> 
-                <span style={{marginTop: '0.25em', fontWeight: '600', cursor: 'pointer'}}>Delete Team</span>
+                <span style={{marginTop: '0.25em', fontWeight: '600'}}>Delete Team</span>
               </button>
             </div>
           </div>

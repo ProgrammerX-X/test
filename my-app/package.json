@@ -28,6 +28,7 @@
     "mongoose": "^9.1.5",
     "next": "^16.1.6",
     "nodemailer": "^8.0.1",
+    "query-string": "^9.5.1",
     "radix-ui": "^1.4.3",
     "react": "19.2.3",
     "react-calendar": "^6.0.0",

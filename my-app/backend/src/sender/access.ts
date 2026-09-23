@@ -6,13 +6,14 @@ export async function checkToken(email: string, token: string){
     if(validation!=null){
         return 1
     }else{
-        return null
+        return 0
     }
 }
 
 export async function checkRoots(email: string, project: string, projectId: any, agreeRoots?: any){
+    console.log(projectId)
     const roots = connection.collection('teams')
-    let resp = await roots.findOne({'projects.owner': email, 'projects.proj.project_name': project})
+    let resp = await roots.findOne({'projects.owner': email, 'projects.proj.id_proj': new ObjectId(projectId)})
     if (resp != null){
         return 1
     }else{
@@ -31,10 +32,14 @@ export async function checkRoots(email: string, project: string, projectId: any,
         }
         ]).toArray()
         if (teams.length === 0) return 0
-        const id = new ObjectId(projectId.id)
+        // let id = new ObjectId(projectId.id)
+        // if(projectId===null){
+        //     id = new ObjectId(projectId)
+        // }
+        // console.log(projectId, 38)
         const root = await roots.aggregate([
         { $unwind: '$projects.proj' },
-        { $match: { 'projects.proj.id_proj': id } },
+            { $match: { 'projects.proj.id_proj': new ObjectId(projectId) } },
         { $unwind: '$projects.proj.team' },
         { $match: { 'projects.proj.team.options.email': email } },
         { 
@@ -44,7 +49,6 @@ export async function checkRoots(email: string, project: string, projectId: any,
             } 
         },
         ]).toArray()
-        // console.log(root)
         let rootIndex = teams[0].index;
         let roots_all: string[] = []
         root.map((i=>{
@@ -80,10 +84,11 @@ export async function getEmails_forSockets(teamName: string, owner: string){
             let emails_label: any[] = []
             if (resp != null){
                 await Promise.all(resp.projects.proj.map((element)=>{
-                    element.team.map((item)=>{
+                    console.log(element, 83)
+                    element.length>0 ? element.team.map((item)=>{
                         emails_value.push(...item.options.value)
                         emails_label.push(...item.options.label)
-                    })
+                    }) : (emails_value=[], emails_label=[])
                 }))
                 emails_value = [...new Set(emails_value)]
                 emails_label = [...new Set(emails_label)]
@@ -97,7 +102,7 @@ export async function getEmails_forSockets(teamName: string, owner: string){
                     }
                 }
                 // this.taskGateway.server.emit('getEmails', {payload: final_object});
-                return final_object
+                return final_object 
             }else{
                 return null
             }

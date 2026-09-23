@@ -4,7 +4,7 @@ import './page.css'
 import Image from 'next/image'
 import { useWindowSize } from "react-use";
 
-export function ModalWindow({value, onClose, email} ){
+export function ModalWindow({value, onClose, email, allProjectsCaller} ){
     const [title, setTitle] = useState('')
     const [direction, setDirection] = useState('')
     const [error, setError] = useState('')
@@ -50,7 +50,7 @@ export function ModalWindow({value, onClose, email} ){
                     <span style={{fontSize: '0.7em', color: 'red', fontFamily: 'REM'}} className='title_dir'>{error}</span>
                     <div className='agree'>
                     <button className="agree_button"
-                    onClick={() => {send_data()}}>
+                    onClick={async() => {await send_data(); await allProjectsCaller();}}>
                         Create project
                         </button>
                     </div>

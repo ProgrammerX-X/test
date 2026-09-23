@@ -26,7 +26,7 @@ export async function proxy(request: NextRequest) {
         right_token = await getToken(cookieEmailUnsign);
     }
 
-    if(path.startsWith('/projects') || path.startsWith('/profile')) {
+    if(path.startsWith('/projects')) {
         if(right_token!=null && cookiesessionUnsign != right_token){
             return NextResponse.redirect((new URL('/confirmation', request.url)))
         }

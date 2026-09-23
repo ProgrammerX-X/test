@@ -18,7 +18,7 @@ export async function editOwner(newEmail){
 }
 export async function deleteOwner(){
     const edit_response = await fetch(`${process.env.NEXT_PUBLIC_SERVER_DOMAIN}/sender/deleteOwner`,{
-        method: 'GET',
+        method: 'DELETE',
         credentials: 'include',
         headers: {'Content-Type': 'application/json'}, 
     })
