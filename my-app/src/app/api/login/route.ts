@@ -34,15 +34,15 @@ export async function POST(request:NextRequest){
         }
     }catch(error){
         const err = error_show(error)
-        try {
-            await fs.access('./logs');
-        } catch {
-            await fs.mkdir('./logs', { recursive: true });
-        }
-        await fs.appendFile(
-        './logs/logFile.txt', 
-        `${new Date().toLocaleString()}, ${await err}\n`
-    );
+        // try {
+        //     await fs.access('./logs');
+        // } catch {
+        //     await fs.mkdir('./logs', { recursive: true });
+        // }
+        // await fs.appendFile(
+        // './logs/logFile.txt', 
+        // `${new Date().toLocaleString()}, ${err}\n`
+    // );
         return Response.json({status: 500, err: err, err_db: ''})
     }
 }
@@ -64,7 +64,7 @@ async function valid_data(email: string, password: string){
             Object.assign(resp, {password: 'Password invalid, check it please.'})
         }
         Object.assign(resp, {params: params.params})
-        console.log(resp)
+        // console.log(resp)
         return resp
     }catch(error){
         return {err: error_show(error), params: params}
@@ -83,7 +83,7 @@ async function check_db(email: string, password: string){
         console.log(db_client, 83)
         const ans = await db_client.db('login').collection('users').findOne({email: email})
         const ans_ = await db_client.db('login').collection('users').findOne({confirmed: false, email: email})
-        const pass_check = await db_client.db('login').collection('users').findOne({email: email, password: argon2.verify(ans?.password, password)})
+        // const pass_check = await db_client.db('login').collection('users').findOne({email: email, password: argon2.verify(ans?.password, password)})
         if(ans_ != null){
             Object.assign(resp, {params:"ok"})
         }else{
